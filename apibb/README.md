@@ -2,26 +2,33 @@
 apibb - API bulletin board - rendezvous service
 ===============================================
 
-Summary:
+Summary
+-------
 There exists a top-level namespace of DNS-like names (valid chars: A-Z,-.),
 where each name is a container for many node advertisements.
 
-NAMES:
-1. List of names costs 1 satoshi.
-2. Names cost 10 satoshis/hour to exist, after which they are removed.
-3. Anyone may pay to extend the lifetime of a name, for up to 30 days.
+NAMES
+-----
+* List of names costs 1 satoshi.
+* Names cost 10 satoshis/hour to exist, after which they are removed.
+* Anyone may pay to extend the lifetime of a name, for up to 30 days.
 
-ADVERTISEMENTS:
-1. List of advertisements contained within one name costs 1 satoshi.
-2. Advertisements cost 2 satoshis/hour to exist, after which they are removed.
+ADVERTISEMENTS
+--------------
+* List of advertisements contained within one name costs 1 satoshi.
+* Advertisements cost 2 satoshis/hour to exist, after which they are removed.
 
+Other notes
+-----------
 * A node may advertise their service URI within a single name for X hours
 * All names, and all advertisements expire (if not extended w/ payment)
 * Example:  Nodes seeking storage services download a list of all nodes
     advertising the "storage.v1" service.
 
-Pricing theory:
+Pricing theory
+--------------
 (A) Anybody may pay to create or renew a name for X hours.
+
 (B) Anybody may pay to advertise a name + URI combination for X hours.
 
 
