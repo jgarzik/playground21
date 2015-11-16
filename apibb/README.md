@@ -67,10 +67,10 @@ $ python3 apibb-server.py
 
 API;
 
-name-list = names()
-name.renew(name, delta-hours)
-ad-list = ads(name)
-advertise(name, uri, pubkey, delta-hours)
+* name-list = names()
+* name.renew(name, delta-hours)
+* ad-list = ads(name)
+* advertise(name, uri, pubkey, delta-hours)
 
 
 
@@ -80,12 +80,15 @@ advertise(name, uri, pubkey, delta-hours)
 HTTP URI: /names
 
 Params:
+
 	none
 
 Result:
+
 	JSON list of objects containing: name, creation time, expiration time
 
 Pricing:
+
 	1 satoshi
 
 
@@ -95,14 +98,17 @@ Pricing:
 HTTP URI: /namerenew
 
 Params:
+
 	name	Name string
 	hours	Number of hours until expiration
 		(or if renewing, number of hours to add to expiration)
 
 Result if successful:
+
 	Binary string, "OK"
 
 Pricing:
+
 	10 satoshis per hour
 
 
@@ -112,13 +118,16 @@ Pricing:
 HTTP URI: /ads
 
 Params:
+
 	name	Name string
 
 Result if successful:
+
 	JSON list of objects, each obj describes a single node
 	advertising the "name" service.
 
 Pricing:
+
 	1 satoshi
 
 
@@ -128,6 +137,7 @@ Pricing:
 HTTP URI: /advertise
 
 Params:
+
 	name	Name string
 	uri	URI to advertise
 	pubkey	Public key associated with URI
@@ -135,8 +145,10 @@ Params:
 		(or if renewing, number of hours to add to expiration)
 
 Result if successful:
+
 	Binary string, "OK"
 
 Pricing:
+
 	2 satoshis per hour
 
