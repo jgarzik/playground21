@@ -4,16 +4,17 @@ A storage service geared toward small files with ECDSA signature auth that works
 
 This project is for a server that will store and return data for a certain amount of time and accept updates if they are signed by a user's payment address.
 
-***
-** Roadmap **
-
-* All storage expires after one year. Extended by uploading the same data. 
-* Data is kept if bandwidth is exceeded just no longer served until balance is increased.
-
 ## REST API
 
 * All requests via HTTP GET except where noted.
-* Data returned as JSON.
+* Data returned as JSON, formatted with indent=4 for now.
+
+### /help
+    Parameters
+        None
+
+    Returns
+        List of available endpoints
 
 ### /status
     Parameters
@@ -31,6 +32,21 @@ This project is for a server that will store and return data for a certain amoun
         
     Returns
         price - satoshis for 1 MB storage + 50 MB transfer
+
+### /nonce
+    Parameters
+        address - account requesting a nonce
+        
+    Returns
+        nonce - random 32-byte string
+        
+Note: nonce will later be stored until used or next nonce generated for address
+
+***
+** Roadmap **
+
+* All storage expires after one year. Extended by uploading the same data. 
+* Data is kept if bandwidth is exceeded just no longer served until balance is increased.
     
 ### /address
     Parameters
@@ -42,14 +58,6 @@ This project is for a server that will store and return data for a certain amoun
     Returns
         address - a new, unused Bitcoin address
 
-### /nonce
-    Parameters
-        address - account requesting a nonce
-        
-    Returns
-        nonce - random 32-byte string
-        
-Note: nonce is stored until used or next nonce generated for address
 
 ### /balance
     Parameters
