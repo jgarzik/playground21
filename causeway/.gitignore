@@ -1,0 +1,3 @@
+__pycache*
+*.sqlite3
+settings.py
