@@ -42,6 +42,18 @@ This project is for a server that will store and return data for a certain amoun
         
 Note: nonce will later be stored until used or next nonce generated for address
 
+
+## Installation
+
+### raspbian
+
+First choose where you will host your database, this database will host operational as well as customer-uploaded data.
+
+    sudo apt-get install python3-flask-sqlalchemy sqlite3
+    sqlite3 /path/to/db/causeway.db < schema.sql
+
+Then you'll need to copy default\_settings.py to settings.py and change DATABASE to the full path where you created the database.
+
 ***
 ** Roadmap **
 
