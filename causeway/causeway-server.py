@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os, json, random, time, string
 from settings import *
 
