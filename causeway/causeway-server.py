@@ -75,16 +75,18 @@ def price():
 def nonce():
     '''Return 32-byte nonce for generating non-reusable signatures..'''
     from models import Owner
+
     # check if user exists
-    o = Owner.query.get(request.args.get('address'))
+    o = db.session.query(Owner).get(request.args.get('address'))
     if o is None:
         return abort(500)
 
-    # check if nonce is set for user
+    # if nonce is set for user return it, else make a new one
     if len(o.nonce) == 32:
-        return json.dumps({'nonce': nonce}, indent=4)
+        return json.dumps({'nonce': o.nonce}, indent=4)
     # if not, create one and store it
     else:
+        print("storing")
         n = ''.join(random.SystemRandom().choice(string.hexdigits) for _ in range(32))
         o.nonce = n.lower()
         db.session.commit()
@@ -136,5 +138,5 @@ def help():
     return json.dumps(links, indent=4)
 
 if __name__ == '__main__':
-    # app.debug = True
+    app.debug = True
     app.run(host='0.0.0.0', port=SERVER_PORT)
