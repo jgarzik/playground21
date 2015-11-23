@@ -73,7 +73,11 @@ def get_info():
         }
 
     }
-    return json.dumps(info_obj, indent=2)
+    body = json.dumps(info_obj, indent=2)
+    return (body, 200, {
+        'Content-length': len(body),
+        'Content-type': 'application/json',
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=12001)
