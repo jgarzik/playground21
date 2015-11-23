@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os, json, random, time, string
 from settings import *
 
@@ -5,11 +7,14 @@ from flask import Flask
 from flask import request
 from flask import send_from_directory
 from flask import abort, url_for
+from flask.ext.sqlalchemy import SQLAlchemy
 
 from two1.lib.wallet import Wallet
 from two1.lib.bitserv.flask import Payment
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DATABASE
+db = SQLAlchemy(app)
 wallet = Wallet()
 payment = Payment(app, wallet)
 
@@ -30,6 +35,23 @@ for file_id in range(len(file_list)):
         price = 1000
     files[file_id+1] = file_name, size, price
 
+"""
+@app.route('/buy', methods=['POST'])
+@payment.required(get_price_from_request)
+def buy_storage():
+    '''Stores selected file if payment is made.'''
+    # extract data from client request
+    key = request.get_json.get('key', '')
+    value = request.get_json.get('value', '')
+    address = request.get_json.get('address', '')
+    nonce = request.get_json.get('nonce', '')
+    signature = request.get_json().get('signature', '')
+
+    # check if selection is valid
+    if(sel < 1 or sel > len(file_list)):
+         return abort(500)
+    else:
+"""
 
 @app.route('/status')
 def status():
@@ -47,13 +69,48 @@ def status():
 @app.route('/price')
 def price():
     '''Return price for 1MB storage with bundled 50MB transfer.'''
-    return json.dumps({'price': PRICE}, indent=4)
+    return json.dumps({'price': PRICE})
 
 @app.route('/nonce')
 def nonce():
     '''Return 32-byte nonce for generating non-reusable signatures..'''
-    n = ''.join(random.SystemRandom().choice(string.hexdigits) for _ in range(32))
-    return json.dumps({'nonce': n.lower()}, indent=4)
+    from models import Owner
+
+    # check if user exists
+    o = db.session.query(Owner).get(request.args.get('address'))
+    if o is None:
+        return abort(500)
+
+    # if nonce is set for user return it, else make a new one
+    if len(o.nonce) == 32:
+        return json.dumps({'nonce': o.nonce})
+    # if not, create one and store it
+    else:
+        print("storing")
+        n = ''.join(random.SystemRandom().choice(string.hexdigits) for _ in range(32))
+        o.nonce = n.lower()
+        db.session.commit()
+        return json.dumps({'nonce': o.nonce})
+
+@app.route('/address')
+def address():
+    '''Return new or unused deposit address for a new or existing account.'''
+    from models import Owner
+
+    # check if user exists
+    o = db.session.query(Owner).get(request.args.get('address'))
+    if o is None:
+        return abort(500)
+
+    address = request.args.get('address') 
+    message = request.args.get('contact') + "," + address
+    signature = request.args.get('signature')
+
+    print(len(signature))
+    if len(signature) == 88 and wallet.verify_bitcoin_message(message, signature, address):
+        return json.dumps({'address': 'hereyago'})
+    else:
+        return json.dumps({'error': 'Invalid signature'})
 
 @app.route('/files')
 def file_lookup():
@@ -66,6 +123,7 @@ def get_price_from_request(request):
     id = int(request.args.get('selection'))
     return files[id][1]
 
+"""
 @app.route('/buy')
 @payment.required(get_price_from_request)
 def buy_file():
@@ -78,6 +136,7 @@ def buy_file():
          return abort(500)
     else:
         return send_from_directory(DATA_DIR, file_list[int(sel)-1])
+"""
 
 def has_no_empty_params(rule):
     '''Testing rules to identify routes.'''
@@ -99,5 +158,5 @@ def help():
     return json.dumps(links, indent=4)
 
 if __name__ == '__main__':
-    # app.debug = True
+    app.debug = True
     app.run(host='0.0.0.0', port=SERVER_PORT)

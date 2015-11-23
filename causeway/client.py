@@ -1,6 +1,6 @@
-import sys
-import json
-import os
+#!/usr/bin/env python3
+
+import sys, json, os, argparse
 
 # import from the 21 Developer Library
 from two1.commands.config import Config
@@ -50,10 +50,35 @@ def buy_file(server_url = 'http://localhost:5000/'):
     except ValueError:
         print("That is an invalid input. Only numerical inputs are accepted.")
 
+def nonce(args):
+    sel_url = args.url + 'nonce?address={0}'
+    answer = requests.get(url=sel_url.format(args.address))
+    print(answer.text)
+
+def address(args):
+    sel_url = args.url + 'address?contact={0}&address={1}&signature={2}'
+    answer = requests.get(url=sel_url.format(args.contact, args.address, args.signature))
+    print(answer.text)
+
+def help(args):
+    print("Please run with --help")
+
 if __name__ == '__main__':
-    import sys
-    if len(sys.argv) > 1:
-        server_url = sys.argv[1]
-    else:
-        server_url = 'http://localhost:5000/'
-    buy_file(server_url)
+    parser = argparse.ArgumentParser(description="Interact with Causeway server")
+    #parser.set_defaults(func=help)
+    subparsers = parser.add_subparsers(help="Commands")
+
+    parser_nonce = subparsers.add_parser('nonce', help="Get nonce for the address")
+    parser_nonce.add_argument('url', help='Url of the Causeway server with trailing slash.')  
+    parser_nonce.add_argument('address', help='Address used as username for the service.')  
+    parser_nonce.set_defaults(func=nonce)
+
+    parser_address = subparsers.add_parser('address', help="Get a deposit address")
+    parser_address.add_argument('url', help='Url of the Causeway server with trailing slash.')  
+    parser_address.add_argument('contact', help='Email address to contact on expiration.')  
+    parser_address.add_argument('address', help='Address used as username for the service.')  
+    parser_address.add_argument('signature', help='Signature of "contact,address" using address\' privkey') 
+    parser_address.set_defaults(func=address)
+   
+    args = parser.parse_args()
+    args.func(args)

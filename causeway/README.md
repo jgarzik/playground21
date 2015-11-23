@@ -33,21 +33,6 @@ This project is for a server that will store and return data for a certain amoun
     Returns
         price - satoshis for 1 MB storage + 50 MB transfer
 
-### /nonce
-    Parameters
-        address - account requesting a nonce
-        
-    Returns
-        nonce - random 32-byte string
-        
-Note: nonce will later be stored until used or next nonce generated for address
-
-***
-** Roadmap **
-
-* All storage expires after one year. Extended by uploading the same data. 
-* Data is kept if bandwidth is exceeded just no longer served until balance is increased.
-    
 ### /address
     Parameters
         contact - email or Bitmessage address to contact on expiration
@@ -56,7 +41,35 @@ Note: nonce will later be stored until used or next nonce generated for address
             private key for address
         
     Returns
-        address - a new, unused Bitcoin address
+        address - a dummy string, later an address suitable for funding an account
+
+### /nonce
+    Parameters
+        address - manually entered account requesting a nonce, users will need to 
+                  pay to register in order to be eligible for nonces
+        
+    Returns
+        nonce - random 32-byte string
+        
+Note: nonce will later be stored until used or next nonce generated for address
+
+## Installation
+
+### raspbian
+
+First choose where you will host your database, this database will host operational as well as customer-uploaded data.
+
+    sudo apt-get install python3-flask-sqlalchemy sqlite3
+    sqlite3 /path/to/db/causeway.db < schema.sql
+
+Then you'll need to copy default\_settings.py to settings.py and change DATABASE to the full path where you created the database.
+
+***
+** Roadmap **
+
+* All storage expires after one year. Extended by uploading the same data. 
+* Data is kept if bandwidth is exceeded just no longer served until balance is increased.
+    
 
 
 ### /balance
