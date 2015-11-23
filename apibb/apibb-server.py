@@ -168,7 +168,7 @@ def get_advertisements():
 
     return json.dumps(rv)
 
-@app.route('/info')
+@app.route('/')
 def get_info():
     info_obj = {
         "name": "apibb",
@@ -189,7 +189,7 @@ def get_info():
         }
 
     }
-    return json.dumps(info_obj)
+    return json.dumps(info_obj, indent=2)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=12002, debug=True)

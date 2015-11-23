@@ -24,12 +24,12 @@ requests = BitTransferRequests(wallet, username)
 server_url = 'http://localhost:12012/'
 
 def cmd_fortune():
-    sel_url = server_url
+    sel_url = server_url + 'fortune'
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 
 def cmd_info():
-    sel_url = server_url + 'info'
+    sel_url = server_url
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 

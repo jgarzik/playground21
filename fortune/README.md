@@ -22,7 +22,7 @@ API;
 1. Get fortune
 --------------
 
-HTTP URI: /
+HTTP URI: /fortune
 
 Params: None
 

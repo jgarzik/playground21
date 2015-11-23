@@ -34,7 +34,7 @@ def cmd_put(key, value):
     print(answer.text)
 
 def cmd_info():
-    sel_url = server_url + 'info'
+    sel_url = server_url
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 

@@ -25,7 +25,7 @@ requests = BitTransferRequests(wallet, username)
 server_url = 'http://localhost:12002/'
 
 def cmd_info():
-    sel_url = server_url + 'info'
+    sel_url = server_url
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 
