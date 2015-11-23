@@ -21,7 +21,7 @@ def get_get_price_from_request(request):
     price = 0
     if key in db:
         price = len(db[key])
-    if price < 1
+    if price < 1:
         price = 1
     return price
 
