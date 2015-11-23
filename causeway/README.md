@@ -33,15 +33,25 @@ This project is for a server that will store and return data for a certain amoun
     Returns
         price - satoshis for 1 MB storage + 50 MB transfer
 
+### /address
+    Parameters
+        contact - email or Bitmessage address to contact on expiration
+        address - account this will be used to fund
+        signature - signature for concatenation of contact and address by
+            private key for address
+        
+    Returns
+        address - a dummy string, later an address suitable for funding an account
+
 ### /nonce
     Parameters
-        address - account requesting a nonce
+        address - manually entered account requesting a nonce, users will need to 
+                  pay to register in order to be eligible for nonces
         
     Returns
         nonce - random 32-byte string
         
 Note: nonce will later be stored until used or next nonce generated for address
-
 
 ## Installation
 
@@ -60,15 +70,6 @@ Then you'll need to copy default\_settings.py to settings.py and change DATABASE
 * All storage expires after one year. Extended by uploading the same data. 
 * Data is kept if bandwidth is exceeded just no longer served until balance is increased.
     
-### /address
-    Parameters
-        contact - email or Bitmessage address to contact on expiration
-        address - account this will be used to fund
-        signature - signature for concatenation of contact and address by
-            private key for address
-        
-    Returns
-        address - a new, unused Bitcoin address
 
 
 ### /balance
