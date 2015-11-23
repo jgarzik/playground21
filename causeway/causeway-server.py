@@ -69,7 +69,7 @@ def status():
 @app.route('/price')
 def price():
     '''Return price for 1MB storage with bundled 50MB transfer.'''
-    return json.dumps({'price': PRICE}, indent=4)
+    return json.dumps({'price': PRICE})
 
 @app.route('/nonce')
 def nonce():
@@ -83,14 +83,34 @@ def nonce():
 
     # if nonce is set for user return it, else make a new one
     if len(o.nonce) == 32:
-        return json.dumps({'nonce': o.nonce}, indent=4)
+        return json.dumps({'nonce': o.nonce})
     # if not, create one and store it
     else:
         print("storing")
         n = ''.join(random.SystemRandom().choice(string.hexdigits) for _ in range(32))
         o.nonce = n.lower()
         db.session.commit()
-        return json.dumps({'nonce': o.nonce}, indent=4)
+        return json.dumps({'nonce': o.nonce})
+
+@app.route('/address')
+def address():
+    '''Return new or unused deposit address for a new or existing account.'''
+    from models import Owner
+
+    # check if user exists
+    o = db.session.query(Owner).get(request.args.get('address'))
+    if o is None:
+        return abort(500)
+
+    address = request.args.get('address') 
+    message = request.args.get('contact') + "," + address
+    signature = request.args.get('signature')
+
+    print(len(signature))
+    if len(signature) == 88 and wallet.verify_bitcoin_message(message, signature, address):
+        return json.dumps({'address': 'hereyago'})
+    else:
+        return json.dumps({'error': 'Invalid signature'})
 
 @app.route('/files')
 def file_lookup():

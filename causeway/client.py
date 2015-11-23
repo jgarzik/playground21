@@ -56,7 +56,7 @@ def nonce(args):
     print(answer.text)
 
 def address(args):
-    sel_url = args.url + 'address?contact={0}&address={1}&signature={3}'
+    sel_url = args.url + 'address?contact={0}&address={1}&signature={2}'
     answer = requests.get(url=sel_url.format(args.contact, args.address, args.signature))
     print(answer.text)
 
