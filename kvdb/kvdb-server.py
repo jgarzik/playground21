@@ -65,7 +65,7 @@ def store_value():
 
     return "stored"
 
-@app.route('/info')
+@app.route('/')
 def get_info():
     info_obj = {
 	"name": "kvdb",
@@ -80,8 +80,12 @@ def get_info():
         }
 
     }
-    return json.dumps(info_obj)
+    body = json.dumps(info_obj, indent=2)
+    return (body, 200, {
+        'Content-length': len(body),
+        'Content-type': 'application/json',
+    })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=12002, debug=True)
+    app.run(host='0.0.0.0', port=12003)
 

@@ -30,7 +30,7 @@ def get_fortune_text():
     return outs
 
 # endpoint to get a value from the server
-@app.route('/')
+@app.route('/fortune')
 @payment.required(10)
 def get_fortune():
     fortune = get_fortune_text()
@@ -39,20 +39,24 @@ def get_fortune():
 
     return fortune
 
-@app.route('/info')
+@app.route('/')
 def get_info():
     info_obj = {
 	"name": "fortune",
 	"version": 100,
         "pricing": {
-            "/" : {
+            "/fortune" : {
                 "minimum" : 10
             },
         }
 
     }
-    return json.dumps(info_obj)
+    body = json.dumps(info_obj, indent=2)
+    return (body, 200, {
+        'Content-length': len(body),
+        'Content-type': 'application/json',
+    })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=12012, debug=True)
+    app.run(host='0.0.0.0', port=12012)
 

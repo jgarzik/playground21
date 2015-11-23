@@ -21,7 +21,7 @@ username = Config().username
 requests = BitTransferRequests(wallet, username)
 
 # server address
-server_url = 'http://localhost:12002/'
+server_url = 'http://localhost:12003/'
 
 def cmd_get(key):
     sel_url = server_url + 'get?key={0}'
@@ -34,7 +34,7 @@ def cmd_put(key, value):
     print(answer.text)
 
 def cmd_info():
-    sel_url = server_url + 'info'
+    sel_url = server_url
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 

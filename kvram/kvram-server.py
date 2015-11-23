@@ -21,7 +21,7 @@ def get_get_price_from_request(request):
     price = 0
     if key in db:
         price = len(db[key])
-    if price < 1
+    if price < 1:
         price = 1
     return price
 
@@ -58,7 +58,7 @@ def store_value():
 
     return "stored"
 
-@app.route('/info')
+@app.route('/')
 def get_info():
     info_obj = {
 	"name": "kvram",
@@ -73,8 +73,12 @@ def get_info():
         }
 
     }
-    return json.dumps(info_obj)
+    body = json.dumps(info_obj, indent=2)
+    return (body, 200, {
+        'Content-length': len(body),
+        'Content-type': 'application/json',
+    })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=12001, debug=True)
+    app.run(host='0.0.0.0', port=12001)
 
