@@ -8,11 +8,10 @@ Usage:
 
 
 import os, json, random, time, string
-from settings import DATABASE, PRICE, DATA_DIR, PORT 
+from settings import DATABASE, PRICE, DATA_DIR, SERVER_PORT
 
 from flask import Flask
 from flask import request
-from flask import send_from_directory
 from flask import abort, url_for
 from flask.ext.sqlalchemy import SQLAlchemy
 
@@ -31,43 +30,36 @@ stored = 0
 
 @app.route('/')
 def home():
-    home_obj = [
-                    {
-                        "name": "causeway/1",       # service 'causeway', version '1'
-                        "pricing-type": "per-mb",   # pricing is listed per 1000000 bytes
-                        "pricing" : [
-                            {
-                                "rpc": "buy_storage",
-                                "per-req": 0,
-                                "per-mb": PRICE
-                            },
-                            {
-                                "rpc": "get",
-                                "per-req": 0,
-                                "per-mb": 0
-                            },
-                            {
-                                "rpc": "put",
-                                "per-req": 0,
-                                "per-mb": 0
-                            },
+    '''Return service, pricing and endpoint information'''
+    home_obj = [{"name": "causeway/1",       # service 'causeway', version '1'
+                 "pricing-type": "per-mb",   # pricing is listed per 1000000 bytes
+                 "pricing" : [{"rpc": "buy_storage",
+                               "per-req": 0,
+                               "per-mb": PRICE
+                              },
+                              {"rpc": "get",
+                               "per-req": 0,
+                               "per-mb": 0
+                              },
+                              {"rpc": "put",
+                               "per-req": 0,
+                               "per-mb": 0
+                              },
 
-                            # default
-                            {
-                                "rpc": True,        # True indicates default
-                                "per-req": 0,
-                                "per-mb": 0
-                            }
-                         ]
-                    }
+                              # default
+                              {"rpc": True,        # True indicates default
+                               "per-req": 0,
+                               "per-mb": 0
+                              }]
+                }
                ]
 
     body = json.dumps(home_obj, indent=2)
 
-    return (body, 200,{
-            'Content-length': len(body),
-            'Content-type': 'application/json',
-           })
+    return (body, 200, {'Content-length': len(body),
+                        'Content-type': 'application/json',
+                       }
+           )
 
 @app.route('/status')
 def status():
@@ -79,21 +71,21 @@ def status():
                        'stored': str(stored),
                        'free': str(free),
                        'price': str(PRICE)
-                       }, indent=2
-                      )
-    return (body, 200,{
-            'Content-length': len(body),
-            'Content-type': 'application/json',
-           })
+                      }, indent=2
+                     )
+    return (body, 200, {'Content-length': len(body),
+                        'Content-type': 'application/json',
+                       }
+           )
 
 @app.route('/price')
 def price():
     '''Return price for 1MB storage with bundled 50MB transfer.'''
     body = json.dumps({'price': PRICE})
-    return (body, 200,{
-            'Content-length': len(body),
-            'Content-type': 'application/json',
-           })
+    return (body, 200, {'Content-length': len(body),
+                        'Content-type': 'application/json',
+                       }
+           )
 
 @app.route('/buy')
 @payment.required(PRICE)
@@ -110,31 +102,33 @@ def buy_hosting():
         # create sale record for address
         s = Sale(owner, 1, 30, PRICE)
         s.insert()
-    
+
     body = json.dumps({'Purchase complete.'}, indent=2)
-    return (body, 200,{
-            'Content-length': len(body),
-            'Content-type': 'application/json',
-           })
+    return (body, 200, {'Content-length': len(body),
+                        'Content-type': 'application/json',
+                       }
+           )
 
 @app.route('/put', methods=['POST'])
 def put():
     '''Store a key-value pair.'''
     # get size of file sent
-    size = len(request.args.
     # check if owner has enough free storage
     # store file in db
+    return
 
 @app.route('/get')
 def get():
     '''Get a key-value pair.'''
     # calculate size and check against quota on kv's sale record
+    return
 
 @app.route('/delete')
 def delete():
     '''Delete a key-value pair.'''
     # check if signed by owner
     # delete file
+    return
 
 @app.route('/nonce')
 def nonce():
@@ -155,15 +149,15 @@ def nonce():
         n = ''.join(random.SystemRandom().choice(string.hexdigits) for _ in range(32))
         o.nonce = n.lower()
         db.session.commit()
-        body  json.dumps({'nonce': o.nonce})
-    
-    return (body, 200,{
-            'Content-length': len(body),
-            'Content-type': 'application/json',
-           })
+        body = json.dumps({'nonce': o.nonce})
+
+    return (body, 200, {'Content-length': len(body),
+                        'Content-type': 'application/json',
+                       }
+           )
 
 @app.route('/address')
-def address():
+def get_deposit_address():
     '''Return new or unused deposit address for on-chain funding.'''
     from models import Owner
 
@@ -172,7 +166,7 @@ def address():
     if o is None:
         return abort(500)
 
-    address = request.args.get('address') 
+    address = request.args.get('address')
     message = request.args.get('contact') + "," + address
     signature = request.args.get('signature')
 
@@ -182,10 +176,10 @@ def address():
     else:
         body = json.dumps({'error': 'Invalid signature'})
 
-    return (body, 200,{
-            'Content-length': len(body),
-            'Content-type': 'application/json',
-           })
+    return (body, 200, {'Content-length': len(body),
+                        'Content-type': 'application/json',
+                       }
+           )
 
 def has_no_empty_params(rule):
     '''Testing rules to identify routes.'''
@@ -194,7 +188,7 @@ def has_no_empty_params(rule):
     return len(defaults) >= len(arguments)
 
 @app.route('/info')
-def help():
+def info():
     '''Returns list of defined routes.'''
     links = []
     for rule in app.url_map.iter_rules():
