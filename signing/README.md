@@ -2,7 +2,7 @@
 signing - Bitcoin transaction signing server
 ============================================
 
-WARNING:  untested work-in-progress.
+WARNING:  Work-in-progress.  Status: untested + feature complete.
 
 Summary:  Create account at signing server.  Sign a bitcoin transaction.
 
