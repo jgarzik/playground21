@@ -48,7 +48,9 @@ Pricing:
 
 
 
-HTTP URI: PUT /sign/<contract id>
+2. Sign contract
+----------------
+HTTP URI: PUT /sign/[contract id]
 
 Params:
 
