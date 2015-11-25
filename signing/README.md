@@ -65,7 +65,7 @@ Params:
 
 Result:
 
-	text/plain document contained signed, hex-encoded transaction
+	text/plain document containing signed, hex-encoded transaction
 
 Pricing:
 
