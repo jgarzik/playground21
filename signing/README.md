@@ -8,11 +8,13 @@ Summary:  Create account at signing server.  Sign a bitcoin transaction.
 
 Demonstrates:
 
-* Public key authentication (only signs contract based on previously suppled public key)
+* Participating in a P2SH, P2PKH, and/or multisig contract, by generating and providing a public key upon request.
 
 * Signing a bitcoin transaction
 
 * Broadcasting a bitcoin transaction to the bitcoin network
+
+* Public key authentication (only signs transaction for contract based on public key supplied at first contact)
 
 
 Running the server
