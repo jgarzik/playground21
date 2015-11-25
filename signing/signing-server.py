@@ -14,7 +14,7 @@ from two1.lib.bitcoin.crypto import PublicKey
 from two1.lib.wallet import Wallet, exceptions
 from two1.lib.bitserv.flask import Payment
 
-connection = apsw.Connection("apibb.db")
+connection = apsw.Connection("signing.db")
 
 SRV_ACCT = 'signing'
 
