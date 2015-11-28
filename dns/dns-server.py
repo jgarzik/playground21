@@ -76,6 +76,7 @@ def parse_hosts(name, in_obj):
 
 
 @app.route('/host.register', methods=['POST'])
+@payment.required(1000)
 def cmd_host_register():
 
     # Validate JSON body w/ API params
@@ -126,6 +127,7 @@ def cmd_host_register():
     })
 
 @app.route('/host.update', methods=['POST'])
+@payment.required(1000)
 def cmd_host_update():
 
     # Validate JSON body w/ API params
@@ -184,6 +186,7 @@ def cmd_host_update():
     })
 
 @app.route('/host.delete', methods=['POST'])
+@payment.required(1000)
 def cmd_host_delete():
 
     # Validate JSON body w/ API params
@@ -244,6 +247,15 @@ def get_info():
         "pricing": {
             "/domains" : {
                 "minimum" : 0
+            },
+            "/host.register" : {
+                "minimum" : 1000
+            },
+            "/host.update" : {
+                "minimum" : 1000
+            },
+            "/host.delete" : {
+                "minimum" : 1000
             },
         }
 

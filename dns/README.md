@@ -1,46 +1,76 @@
 
-signing - Bitcoin transaction signing server
-============================================
+dns - Dynamic DNS management service (working skeleton)
+=======================================================
 
-WARNING:  Work-in-progress.  Status: untested + feature complete.
-
-Summary:  Create account at signing server.  Sign a bitcoin transaction.
+Summary:  DNS management service, suitable for proxying to e.g. Namecheap
 
 Demonstrates:
 
-* Participating in a P2SH, P2PKH, and/or multisig contract, by generating and providing a public key upon request.
+* Flask error handling, file upload.
 
-* Signing a bitcoin transaction
+* Public key authentication - Remote client provides public key from 21BC
+  wallet, to enable permissioned record updates.
 
-* Broadcasting a bitcoin transaction to the bitcoin network
+* Providing request/response via JSON documents.
 
-* Public key authentication (only signs transaction for contract based on public key supplied at first contact)
 
+First time setup
+----------------
+
+	$ ./mkdb.sh
 
 Running the server
 ------------------
 
-	$ python3 signing-server.py
+	$ python3 dns-server.py
 
 
 
-API;
+API
+===
 
-1. New contract
----------------
+1. List DNS domains
+-------------------
+Show DNS domains, e.g. "example.com", available for use at this service.
 
-HTTP URI: GET /new
+HTTP URI: GET /domains
 
 Params:
 
-	owner: Hex-encoded ECDSA public key
+	None
 
 Result:
 
-	application/json document with the following keys:
-	id: contract id (number)
-	contract_key: public key associated with this contract, which the signing server will use for signing future bitcoin transactions
+	application/json document with the following data:
+	List of domains (string)
+	(or an HTTP 4xx, 5xx error)
 
+Pricing:
+
+	Free
+
+
+
+2. Register host name
+---------------------
+HTTP URI: POST /host.register
+
+Params:
+
+	In HTTP body, a application/json document containing the following keys:
+
+	name: name to register. Must be valid DNS name.
+	pkh: (optional) public key hash for permissioned updates
+	days: (optional) number of days to keep name registered (1-365)
+	hosts: (optional) list of objects whose keys are:
+		ttl: DNS TTL, in seconds
+		rec_type: DNS record type ('A' and 'AAAA' supported)
+		address: IPv4 or IPv6 address
+
+Result:
+
+	application/json document with the following data: true
+	(or an HTTP 4xx, 5xx error)
 
 Pricing:
 
@@ -48,24 +78,56 @@ Pricing:
 
 
 
-2. Sign contract
-----------------
-HTTP URI: PUT /sign/[contract id]
+3. Update host records
+----------------------
+Replace _all_ DNS records associated a host, with the specified list.  An
+empty list deletes all records.
+
+HTTP URI: POST /host.update
 
 Params:
 
 	In HTTP body, a application/json document containing the following keys:
 
-	msg: signed message, wrapping a hex-encoded bitcoin transaction
-	sig: base64-encoded signature
-	input_index: index inside BTC tx to sign
-	hash_type: hash type of signature to apply
-	script: hex-encoded scriptPubKey / redeem script
-	broadcast: if true, broadcast signed TX to network
+	name: name to register. Must be valid DNS name.
+	pkh: public key hash for permissioned updates
+	hosts: (optional) list of objects whose keys are:
+		ttl: DNS TTL, in seconds
+		rec_type: DNS record type ('A' and 'AAAA' supported)
+		address: IPv4 or IPv6 address
+
+	Header X-Bitcoin-Sig contains signature of encoded json document.
 
 Result:
 
-	text/plain document containing signed, hex-encoded transaction
+	application/json document with the following data: true
+	(or an HTTP 4xx, 5xx error)
+
+Pricing:
+
+	1000 satoshis
+
+
+
+4. Delete host
+--------------
+Replace _all_ DNS records associated a host, as well as the host itself.
+
+HTTP URI: POST /host.delete
+
+Params:
+
+	In HTTP body, a application/json document containing the following keys:
+
+	name: name to register. Must be valid DNS name.
+	pkh: public key hash for permissioned updates
+
+	Header X-Bitcoin-Sig contains signature of encoded json document.
+
+Result:
+
+	application/json document with the following data: true
+	(or an HTTP 4xx, 5xx error)
 
 Pricing:
 
