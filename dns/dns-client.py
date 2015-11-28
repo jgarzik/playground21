@@ -56,8 +56,55 @@ def cmd_domains(ctx):
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 
+@click.command(name='register')
+@click.argument('name')
+@click.argument('days')
+@click.argument('pkh', nargs=-1)
+@click.pass_context
+def cmd_register(ctx, name, days, pkh):
+    addr = None
+    for one_pkh in pkh:
+        addr = one_pkh
+    req_obj = {
+        'name': name,
+        'days': int(days),
+    }
+    if addr:
+        req_obj['pkh'] = addr
+    sel_url = ctx.obj['endpoint'] + 'host.register'
+    body = json.dumps(req_obj)
+    headers = {'Content-Type': 'application/json'}
+    answer = requests.post(url=sel_url.format(), headers=headers, data=body)
+    print(answer.text)
+
+@click.command(name='update')
+@click.argument('name')
+@click.argument('records', nargs=-1)
+@click.pass_context
+def cmd_update(ctx, name, records):
+    req_obj = {
+        'name': name,
+        'hosts': [],
+    }
+    for record in records:
+        words = record.split(',')
+        host_obj = {
+            'ttl': int(words[0]),
+            'rec_type': words[1],
+            'address': words[2],
+        }
+        req_obj['hosts'].append(host_obj)
+
+    sel_url = ctx.obj['endpoint'] + 'host.update'
+    body = json.dumps(req_obj)
+    headers = {'Content-Type': 'application/json'}
+    answer = requests.post(url=sel_url.format(), headers=headers, data=body)
+    print(answer.text)
+
 main.add_command(cmd_info)
 main.add_command(cmd_domains)
+main.add_command(cmd_register)
+main.add_command(cmd_update)
 
 if __name__ == "__main__":
     main()
