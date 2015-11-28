@@ -14,6 +14,8 @@ and control all DNS address records under that DNS domain.
 
 Demonstrates:
 
+* Pricing in USD dollars (converted to satoshis)
+
 * Flask error handling, file upload.
 
 * Public key authentication - Remote client provides public key from 21BC
@@ -85,7 +87,7 @@ Result:
 
 Pricing:
 
-	1000 satoshis
+	US$0.001/day
 
 
 
@@ -116,7 +118,7 @@ Result:
 
 Pricing:
 
-	1000 satoshis
+	US$0.0033
 
 
 

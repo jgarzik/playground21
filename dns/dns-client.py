@@ -8,11 +8,14 @@ import json
 import os
 import sys
 import click
+import pprint
 
 # import from the 21 Developer Library
 from two1.commands.config import Config
 from two1.lib.wallet import Wallet
 from two1.lib.bitrequests import BitTransferRequests
+
+pp = pprint.PrettyPrinter(indent=2)
 
 # set up bitrequest client for BitTransfer requests
 wallet = Wallet()
@@ -59,16 +62,16 @@ def cmd_domains(ctx):
 @click.command(name='register')
 @click.argument('name')
 @click.argument('days')
-@click.argument('records', nargs=-1)
+@click.argument('recordlist', nargs=-1)
 @click.pass_context
-def cmd_register(ctx, name, days, records):
+def cmd_register(ctx, name, days, recordlist):
 
     pubkey = wallet.get_message_signing_public_key()
     addr = pubkey.address()
     print("Registering with key %s" % (addr,))
 
     records = []
-    for arg in records:
+    for arg in recordlist:
         words = arg.split(',')
         host_obj = {
             'ttl': int(words[0]),

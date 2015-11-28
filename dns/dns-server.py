@@ -5,6 +5,7 @@ import srvdb
 import re
 import base58
 import ipaddress
+import pprint
 
 # import flask web microframework
 from flask import Flask
@@ -16,6 +17,10 @@ from two1.lib.bitcoin.txn import Transaction
 from two1.lib.bitcoin.crypto import PublicKey
 from two1.lib.wallet import Wallet, exceptions
 from two1.lib.bitserv.flask import Payment
+
+USCENT=2801
+
+pp = pprint.PrettyPrinter(indent=2)
 
 db = srvdb.SrvDb('dns.db')
 
@@ -75,8 +80,22 @@ def parse_hosts(name, in_obj):
     return host_records
 
 
+def get_price_register(request):
+    try:
+        body = request.data.decode('utf-8')
+        in_obj = json.loads(body)
+        days = int(in_obj['days'])
+    except:
+        return 0
+    if days < 1 or days > 365:
+        return 0
+
+    price = int(USCENT / 10) * days
+
+    return price
+
 @app.route('/host.register', methods=['POST'])
-@payment.required(1000)
+@payment.required(get_price_register)
 def cmd_host_register():
 
     # Validate JSON body w/ API params
@@ -127,7 +146,7 @@ def cmd_host_register():
     })
 
 @app.route('/host.update', methods=['POST'])
-@payment.required(1000)
+@payment.required(int(USCENT / 3))
 def cmd_host_update():
 
     # Validate JSON body w/ API params
@@ -186,7 +205,6 @@ def cmd_host_update():
     })
 
 @app.route('/host.delete', methods=['POST'])
-@payment.required(1000)
 def cmd_host_delete():
 
     # Validate JSON body w/ API params
@@ -249,10 +267,10 @@ def get_info():
                 "minimum" : 0
             },
             "/host.register" : {
-                "minimum" : 1000
+                "minimum" : int(USCENT / 10)
             },
             "/host.update" : {
-                "minimum" : 1000
+                "minimum" : int(USCENT / 3)
             },
             "/host.delete" : {
                 "minimum" : 0
