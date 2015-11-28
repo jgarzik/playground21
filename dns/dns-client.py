@@ -59,15 +59,27 @@ def cmd_domains(ctx):
 @click.command(name='register')
 @click.argument('name')
 @click.argument('days')
-@click.argument('pkh', nargs=-1)
+@click.argument('pkh_and_records', nargs=-1)
 @click.pass_context
-def cmd_register(ctx, name, days, pkh):
+def cmd_register(ctx, name, days, pkh_and_records):
     addr = None
-    for one_pkh in pkh:
-        addr = one_pkh
+    records = []
+    for arg in pkh_and_records:
+        if addr is None:
+            addr = arg
+        else:
+            words = arg.split(',')
+            host_obj = {
+                'ttl': int(words[0]),
+                'rec_type': words[1],
+                'address': words[2],
+            }
+            records.append(host_obj)
+
     req_obj = {
         'name': name,
         'days': int(days),
+        'hosts': records,
     }
     if addr:
         req_obj['pkh'] = addr

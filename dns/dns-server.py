@@ -23,7 +23,7 @@ app = Flask(__name__)
 wallet = Wallet()
 payment = Payment(app, wallet)
 
-name_re = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9-\.]*$")
+name_re = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9-]*$")
 
 def valid_name(name):
     if not name or len(name) < 1 or len(name) > 64:
@@ -44,6 +44,36 @@ def get_domains():
         'Content-length': len(body),
         'Content-type': 'application/json',
     })
+
+def parse_hosts(name, in_obj):
+    host_records = []
+    try:
+        if (not 'hosts' in in_obj):
+            return host_records
+
+        hosts = in_obj['hosts']
+        for host in hosts:
+            rec_type = host['rec_type']
+            ttl = int(host['ttl'])
+
+            if ttl < 30 or ttl > (24 * 60 * 60 * 7):
+                return "Invalid TTL"
+
+            if rec_type == 'A':
+                address = ipaddress.IPv4Address(host['address'])
+            elif rec_type == 'AAAA':
+                address = ipaddress.IPv6Address(host['address'])
+            else:
+                return "Invalid rec type"
+
+            host_rec = (name, rec_type, str(address), ttl)
+            host_records.append(host_rec)
+
+    except:
+        return "JSON validation exception"
+
+    return host_records
+
 
 @app.route('/host.register', methods=['POST'])
 def cmd_host_register():
@@ -76,11 +106,18 @@ def cmd_host_register():
     except:
         return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
 
+    # Validate and collect host records for updating
+    host_records = parse_hosts(name, in_obj)
+    if isinstance(host_records, str):
+        return (host_records, 400, {'Content-Type':'text/plain'})
+
     # Add to database.  Rely on db to filter out dups.
     try:
         db.add_host(name, days, pkh)
+        if len(host_records) > 0:
+            db.update_host(name, host_records)
     except:
-        return ("DB Exception", 400, {'Content-Type':'text/plain'})
+        return ("Host addition rejected", 400, {'Content-Type':'text/plain'})
 
     body = json.dumps(True, indent=2)
     return (body, 200, {
@@ -98,7 +135,7 @@ def cmd_host_update():
     except:
         return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
 
-    host_records = []
+    # Validate JSON object basics
     try:
         if (not 'name' in in_obj or
             not 'hosts' in in_obj):
@@ -107,27 +144,13 @@ def cmd_host_update():
         name = in_obj['name']
         if not valid_name(name):
             return ("Invalid name", 400, {'Content-Type':'text/plain'})
-
-        hosts = in_obj['hosts']
-        for host in hosts:
-            rec_type = host['rec_type']
-            ttl = int(host['ttl'])
-
-            if ttl < 30 or ttl > (24 * 60 * 60 * 7):
-                return ("Invalid TTL", 400, {'Content-Type':'text/plain'})
-
-            if rec_type == 'A':
-                address = ipaddress.IPv4Address(host['address'])
-            elif rec_type == 'AAAA':
-                address = ipaddress.IPv6Address(host['address'])
-            else:
-                return ("Invalid rec type", 400, {'Content-Type':'text/plain'})
-
-            host_rec = (name, rec_type, str(address), ttl)
-            host_records.append(host_rec)
-
     except:
         return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
+
+    # Validate and collect host records for updating
+    host_records = parse_hosts(name, in_obj)
+    if isinstance(host_records, str):
+        return (host_records, 400, {'Content-Type':'text/plain'})
 
     # Add to database.  Rely on db to filter out dups.
     try:
