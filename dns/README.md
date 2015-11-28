@@ -9,7 +9,7 @@ Demonstrates:
 * Flask error handling, file upload.
 
 * Public key authentication - Remote client provides public key from 21BC
-  wallet.  Server verified public key before updating records.
+  wallet.  Server verifies signature before updating records.
 
 * Permissioned SQL database access.
 
