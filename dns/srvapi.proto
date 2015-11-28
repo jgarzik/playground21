@@ -1,0 +1,7 @@
+
+package DDNS;
+
+message ListDomains {
+	repeated string name = 1;
+}
+
