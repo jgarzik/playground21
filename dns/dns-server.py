@@ -255,7 +255,7 @@ def get_info():
                 "minimum" : 1000
             },
             "/host.delete" : {
-                "minimum" : 1000
+                "minimum" : 0
             },
         }
 

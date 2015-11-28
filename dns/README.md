@@ -122,7 +122,7 @@ Pricing:
 
 4. Delete host
 --------------
-Replace _all_ DNS records associated a host, as well as the host itself.
+Remove _all_ DNS records associated a host, as well as the host itself.
 
 HTTP URI: POST /host.delete
 
@@ -142,7 +142,7 @@ Result:
 
 Pricing:
 
-	1000 satoshis
+	Free
 
 
 
