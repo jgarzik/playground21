@@ -1,18 +1,21 @@
 
-dns - Dynamic DNS management service (working skeleton)
-=======================================================
+dns - Dynamic DNS management service
+====================================
 
-Summary:  DNS management service, suitable for proxying to e.g. Namecheap
+Summary:  DNS db management service, suitable for proxying to e.g. Namecheap
 
 Demonstrates:
 
 * Flask error handling, file upload.
 
 * Public key authentication - Remote client provides public key from 21BC
-  wallet, to enable permissioned record updates.
+  wallet.  Server verified public key before updating records.
+
+* Permissioned SQL database access.
 
 * Providing request/response via JSON documents.
 
+Status: Tested and feature complete client + server.
 
 First time setup
 ----------------
