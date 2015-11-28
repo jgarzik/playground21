@@ -3,11 +3,17 @@ CREATE TABLE domains (
 );
 
 CREATE TABLE hosts (
-	name		TEXT NOT NULL,
-	rec_type	TEXT NOT NULL,
-	value		TEXT NOT NULL,
-	owner_pubkey	TEXT NOT NULL
+	name		TEXT PRIMARY KEY,
+	time_create     INTEGER NOT NULL,
+	time_expire     INTEGER NOT NULL,
+	owner_pkh	TEXT NOT NULL
 );
 
-CREATE INDEX hosts_idx ON hosts (name);
+CREATE TABLE records (
+	name		TEXT NOT NULL,
+	rec_type	TEXT NOT NULL,
+	value		TEXT NOT NULL
+);
+
+CREATE INDEX record_idx ON records (name);
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FN=dns.sqlite3
+FN=dns.db
 
 if [ -f $FN ]
 then
