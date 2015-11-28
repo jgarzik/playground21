@@ -4,6 +4,14 @@ dns - Dynamic DNS management service
 
 Summary:  DNS db management service, suitable for proxying to e.g. Namecheap
 
+Once connected to your favorite dynamic DNS API, this server enables you to
+monetize your domain by selling 
+
+	YOUR-NAME-HERE.example.com
+
+Customers buy "my-silly-name.example.com" from this service,
+and control all DNS address records under that DNS domain.
+
 Demonstrates:
 
 * Flask error handling, file upload.
