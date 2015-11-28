@@ -27,14 +27,20 @@ class SrvDb(object):
 
         return True
 
-    def have_host(self, name):
+    def get_host(self, name):
         cursor = self.connection.cursor()
 
         curtime = int(time.time())
-        row = cursor.execute("SELECT name FROM hosts WHERE name = ? AND time_expire > ?", (name, curtime)).fetchone()
+        row = cursor.execute("SELECT * FROM hosts WHERE name = ? AND time_expire > ?", (name, curtime)).fetchone()
         if not row:
-            return False
-        return True
+            return None
+        obj = {
+            'name': row[0],
+            'create': int(row[1]),
+            'expire': int(row[2]),
+            'pkh': row[3],
+        }
+        return obj
 
     def update_host(self, name, host_records):
         cursor = self.connection.cursor()
@@ -43,4 +49,10 @@ class SrvDb(object):
 
         for host_rec in host_records:
             cursor.execute("INSERT INTO records VALUES(?, ?, ?, ?)", host_rec)
+
+    def delete_host(self, name):
+        cursor = self.connection.cursor()
+
+        cursor.execute("DELETE FROM records WHERE name = ?", (name,))
+        cursor.execute("DELETE FROM hosts WHERE name = ?", (name,))
 

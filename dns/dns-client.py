@@ -59,30 +59,31 @@ def cmd_domains(ctx):
 @click.command(name='register')
 @click.argument('name')
 @click.argument('days')
-@click.argument('pkh_and_records', nargs=-1)
+@click.argument('records', nargs=-1)
 @click.pass_context
-def cmd_register(ctx, name, days, pkh_and_records):
-    addr = None
+def cmd_register(ctx, name, days, records):
+
+    pubkey = wallet.get_message_signing_public_key()
+    addr = pubkey.address()
+    print("Registering with key %s" % (addr,))
+
     records = []
-    for arg in pkh_and_records:
-        if addr is None:
-            addr = arg
-        else:
-            words = arg.split(',')
-            host_obj = {
-                'ttl': int(words[0]),
-                'rec_type': words[1],
-                'address': words[2],
-            }
-            records.append(host_obj)
+    for arg in records:
+        words = arg.split(',')
+        host_obj = {
+            'ttl': int(words[0]),
+            'rec_type': words[1],
+            'address': words[2],
+        }
+        records.append(host_obj)
 
     req_obj = {
         'name': name,
         'days': int(days),
+        'pkh': addr,
         'hosts': records,
     }
-    if addr:
-        req_obj['pkh'] = addr
+
     sel_url = ctx.obj['endpoint'] + 'host.register'
     body = json.dumps(req_obj)
     headers = {'Content-Type': 'application/json'}
@@ -91,9 +92,10 @@ def cmd_register(ctx, name, days, pkh_and_records):
 
 @click.command(name='update')
 @click.argument('name')
+@click.argument('pkh')
 @click.argument('records', nargs=-1)
 @click.pass_context
-def cmd_update(ctx, name, records):
+def cmd_update(ctx, name, pkh, records):
     req_obj = {
         'name': name,
         'hosts': [],
@@ -107,9 +109,42 @@ def cmd_update(ctx, name, records):
         }
         req_obj['hosts'].append(host_obj)
 
-    sel_url = ctx.obj['endpoint'] + 'host.update'
+
     body = json.dumps(req_obj)
-    headers = {'Content-Type': 'application/json'}
+    sig_str = wallet.sign_bitcoin_message(body, pkh)
+    if not wallet.verify_bitcoin_message(body, sig_str, pkh):
+        print("Cannot self-verify message")
+        sys.exit(1)
+
+    sel_url = ctx.obj['endpoint'] + 'host.update'
+    headers = {
+        'Content-Type': 'application/json',
+        'X-Bitcoin-Sig': sig_str,
+    }
+    answer = requests.post(url=sel_url.format(), headers=headers, data=body)
+    print(answer.text)
+
+@click.command(name='delete')
+@click.argument('name')
+@click.argument('pkh')
+@click.pass_context
+def cmd_delete(ctx, name, pkh):
+    req_obj = {
+        'name': name,
+        'pkh': pkh
+    }
+
+    body = json.dumps(req_obj)
+    sig_str = wallet.sign_bitcoin_message(body, pkh)
+    if not wallet.verify_bitcoin_message(body, sig_str, pkh):
+        print("Cannot self-verify message")
+        sys.exit(1)
+
+    sel_url = ctx.obj['endpoint'] + 'host.delete'
+    headers = {
+        'Content-Type': 'application/json',
+        'X-Bitcoin-Sig': sig_str,
+    }
     answer = requests.post(url=sel_url.format(), headers=headers, data=body)
     print(answer.text)
 
@@ -117,6 +152,7 @@ main.add_command(cmd_info)
 main.add_command(cmd_domains)
 main.add_command(cmd_register)
 main.add_command(cmd_update)
+main.add_command(cmd_delete)
 
 if __name__ == "__main__":
     main()

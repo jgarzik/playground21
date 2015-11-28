@@ -152,13 +152,83 @@ def cmd_host_update():
     if isinstance(host_records, str):
         return (host_records, 400, {'Content-Type':'text/plain'})
 
+    # Verify host exists, and is not expired
+    try:
+        hostinfo = db.get_host(name)
+        if hostinfo is None:
+            return ("Unknown name", 404, {'Content-Type':'text/plain'})
+    except:
+        return ("DB Exception", 500, {'Content-Type':'text/plain'})
+
+    # Check permission to update
+    pkh = hostinfo['pkh']
+    if pkh is None:
+        return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+    sig_str = request.headers.get('X-Bitcoin-Sig')
+    try:
+        if not sig_str or not wallet.verify_bitcoin_message(body, sig_str, pkh):
+            return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+    except:
+        return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+
     # Add to database.  Rely on db to filter out dups.
     try:
-        if not db.have_host(name):
-            return ("Unknown name", 404, {'Content-Type':'text/plain'})
         db.update_host(name, host_records)
     except:
         return ("DB Exception", 400, {'Content-Type':'text/plain'})
+
+    body = json.dumps(True, indent=2)
+    return (body, 200, {
+        'Content-length': len(body),
+        'Content-type': 'application/json',
+    })
+
+@app.route('/host.delete', methods=['POST'])
+def cmd_host_delete():
+
+    # Validate JSON body w/ API params
+    try:
+        body = request.data.decode('utf-8')
+        in_obj = json.loads(body)
+    except:
+        return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
+
+    # Validate JSON object basics
+    try:
+        if (not 'name' in in_obj or
+            not 'pkh' in in_obj):
+            return ("Missing name/pkh", 400, {'Content-Type':'text/plain'})
+
+        name = in_obj['name']
+        pkh = in_obj['pkh']
+        if (not valid_name(name) or (len(pkh) < 10)):
+            return ("Invalid name", 400, {'Content-Type':'text/plain'})
+    except:
+        return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
+
+    # Verify host exists, and is not expired
+    try:
+        hostinfo = db.get_host(name)
+        if hostinfo is None:
+            return ("Unknown name", 404, {'Content-Type':'text/plain'})
+    except:
+        return ("DB Exception - get host", 500, {'Content-Type':'text/plain'})
+
+    # Check permission to update
+    if (hostinfo['pkh'] is None) or (pkh != hostinfo['pkh']):
+        return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+    sig_str = request.headers.get('X-Bitcoin-Sig')
+    try:
+        if not sig_str or not wallet.verify_bitcoin_message(body, sig_str, pkh):
+            return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+    except:
+        return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+
+    # Remove from database.  Rely on db to filter out dups.
+    try:
+        db.delete_host(name)
+    except:
+        return ("DB Exception - delete host", 400, {'Content-Type':'text/plain'})
 
     body = json.dumps(True, indent=2)
     return (body, 200, {
@@ -185,5 +255,5 @@ def get_info():
     })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=12005, debug=True)
+    app.run(host='0.0.0.0', port=12005)
 
