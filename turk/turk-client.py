@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import click
+import binascii
 import pprint
 
 # import from the 21 Developer Library
@@ -127,6 +128,35 @@ def cmd_update(ctx, name, pkh, records):
     answer = requests.post(url=sel_url.format(), headers=headers, data=body)
     print(answer.text)
 
+@click.command(name='newtask')
+@click.argument('imagefile', type=click.File('rb'))
+@click.argument('content_type')
+@click.argument('questionfile', type=click.File('r'))
+@click.argument('min_workers')
+@click.argument('reward')
+@click.pass_context
+def cmd_task_new(ctx, imagefile, content_type, questionfile, min_workers, reward):
+    auth_pubkey = wallet.get_message_signing_public_key()
+    auth_pkh = auth_pubkey.address()
+
+    print("Registering as supervisor pubkey " + auth_pkh)
+
+    req_obj = {
+        'pkh': auth_pkh,
+	'image': binascii.hexlify(imagefile.read()).decode('utf-8'),
+	'image_ctype': content_type,
+	'questions': json.load(questionfile),
+	'min_workers': int(min_workers),
+	'reward': int(reward),
+    }
+
+    body = json.dumps(req_obj)
+
+    sel_url = ctx.obj['endpoint'] + 'task.new'
+    headers = { 'Content-Type': 'application/json', }
+    answer = requests.post(url=sel_url.format(), headers=headers, data=body)
+    print(answer.text)
+
 @click.command(name='register')
 @click.pass_context
 def cmd_register(ctx):
@@ -148,6 +178,7 @@ def cmd_register(ctx):
     print(answer.text)
 
 main.add_command(cmd_info)
+main.add_command(cmd_task_new)
 main.add_command(cmd_register)
 
 if __name__ == "__main__":

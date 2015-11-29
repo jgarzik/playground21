@@ -1,11 +1,13 @@
 import os
 import json
 import binascii
+import hashlib
 import srvdb
 import re
 import base58
 import ipaddress
 import pprint
+import time
 
 # import flask web microframework
 from flask import Flask
@@ -197,6 +199,58 @@ def cmd_host_update():
         db.update_host(name, host_records)
     except:
         return ("DB Exception", 400, {'Content-Type':'text/plain'})
+
+    body = json.dumps(True, indent=2)
+    return (body, 200, {
+        'Content-length': len(body),
+        'Content-type': 'application/json',
+    })
+
+@app.route('/task.new', methods=['POST'])
+@payment.required(USCENT * 10)
+def cmd_task_new():
+
+    # Validate JSON body w/ API params
+    try:
+        body = request.data.decode('utf-8')
+        in_obj = json.loads(body)
+    except:
+        return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
+
+    # Validate JSON object basics
+    try:
+        if (not 'pkh' in in_obj or
+            not 'image' in in_obj or
+            not 'image_ctype' in in_obj or
+            not 'questions' in in_obj or
+            not 'min_workers' in in_obj or
+            not 'reward' in in_obj):
+            return ("Missing params", 400, {'Content-Type':'text/plain'})
+
+        pkh = in_obj['pkh']
+        image = binascii.unhexlify(in_obj['image'])
+        image_ctype = in_obj['image_ctype']
+        questions = in_obj['questions']
+        min_workers = int(in_obj['min_workers'])
+        reward = int(in_obj['reward'])
+
+        base58.b58decode_check(pkh)
+    except:
+        return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
+
+    # Generate unique id
+    time_str = str(int(time.time()))
+    md = hashlib.sha256()
+    md.update(time_str.encode('utf-8'))
+    md.update(body.encode('utf-8'))
+    id = md.hexdigest()
+
+    # Add worker to database.  Rely on db to filter out dups.
+    try:
+        questions_json = json.dumps(questions)
+        db.task_add(id, pkh, image, image_ctype, questions_json, min_workers, reward)
+    except:
+        return ("DB Exception - add task", 400, {'Content-Type':'text/plain'})
 
     body = json.dumps(True, indent=2)
     return (body, 200, {
