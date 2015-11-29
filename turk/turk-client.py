@@ -10,6 +10,7 @@ import sys
 import click
 import binascii
 import pprint
+import worktmp
 
 # import from the 21 Developer Library
 from two1.commands.config import Config
@@ -53,81 +54,6 @@ def cmd_info(ctx):
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 
-@click.command(name='domains')
-@click.pass_context
-def cmd_domains(ctx):
-    sel_url = ctx.obj['endpoint'] + 'domains'
-    answer = requests.get(url=sel_url.format())
-    print(answer.text)
-
-@click.command(name='register')
-@click.argument('name')
-@click.argument('days')
-@click.argument('recordlist', nargs=-1)
-@click.pass_context
-def cmd_registerx(ctx, name, days, recordlist):
-
-    pubkey = wallet.get_message_signing_public_key()
-    addr = pubkey.address()
-    print("Registering with key %s" % (addr,))
-
-    records = []
-    for arg in recordlist:
-        words = arg.split(',')
-        host_obj = {
-            'ttl': int(words[0]),
-            'rec_type': words[1],
-            'address': words[2],
-        }
-        records.append(host_obj)
-
-    req_obj = {
-        'name': name,
-        'days': int(days),
-        'pkh': addr,
-        'hosts': records,
-    }
-
-    sel_url = ctx.obj['endpoint'] + 'host.register'
-    body = json.dumps(req_obj)
-    headers = {'Content-Type': 'application/json'}
-    answer = requests.post(url=sel_url.format(), headers=headers, data=body)
-    print(answer.text)
-
-@click.command(name='update')
-@click.argument('name')
-@click.argument('pkh')
-@click.argument('records', nargs=-1)
-@click.pass_context
-def cmd_update(ctx, name, pkh, records):
-    req_obj = {
-        'name': name,
-        'hosts': [],
-    }
-    for record in records:
-        words = record.split(',')
-        host_obj = {
-            'ttl': int(words[0]),
-            'rec_type': words[1],
-            'address': words[2],
-        }
-        req_obj['hosts'].append(host_obj)
-
-
-    body = json.dumps(req_obj)
-    sig_str = wallet.sign_bitcoin_message(body, pkh)
-    if not wallet.verify_bitcoin_message(body, sig_str, pkh):
-        print("Cannot self-verify message")
-        sys.exit(1)
-
-    sel_url = ctx.obj['endpoint'] + 'host.update'
-    headers = {
-        'Content-Type': 'application/json',
-        'X-Bitcoin-Sig': sig_str,
-    }
-    answer = requests.post(url=sel_url.format(), headers=headers, data=body)
-    print(answer.text)
-
 @click.command(name='get.task')
 @click.argument('id')
 @click.pass_context
@@ -147,11 +73,23 @@ def cmd_task_list(ctx):
 @click.argument('summary')
 @click.argument('imagefile', type=click.File('rb'))
 @click.argument('content_type')
-@click.argument('questionfile', type=click.File('r'))
+@click.argument('templatefile', type=click.File('r'))
 @click.argument('min_workers')
 @click.argument('reward')
 @click.pass_context
-def cmd_task_new(ctx, summary, imagefile, content_type, questionfile, min_workers, reward):
+def cmd_task_new(ctx, summary, imagefile, content_type, templatefile, min_workers, reward):
+    try:
+        template_obj = json.load(templatefile)
+    except:
+        print("Unable to decode JSON work template")
+        sys.exit(1)
+
+    wt = worktmp.WorkTemplate()
+    wt.set(template_obj)
+    if not wt.valid():
+        print("JSON work template not valid")
+        sys.exit(1)
+
     auth_pubkey = wallet.get_message_signing_public_key()
     auth_pkh = auth_pubkey.address()
 
@@ -162,7 +100,7 @@ def cmd_task_new(ctx, summary, imagefile, content_type, questionfile, min_worker
         'summary': summary,
         'image': binascii.hexlify(imagefile.read()).decode('utf-8'),
         'image_ctype': content_type,
-        'questions': json.load(questionfile),
+        'template': template_obj,
         'min_workers': int(min_workers),
         'reward': int(reward),
     }

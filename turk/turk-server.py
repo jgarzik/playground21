@@ -8,6 +8,7 @@ import base58
 import ipaddress
 import pprint
 import time
+import worktmp
 
 # import flask web microframework
 from flask import Flask
@@ -75,7 +76,7 @@ def cmd_task_new():
             not 'summary' in in_obj or
             not 'image' in in_obj or
             not 'image_ctype' in in_obj or
-            not 'questions' in in_obj or
+            not 'template' in in_obj or
             not 'min_workers' in in_obj or
             not 'reward' in in_obj):
             return ("Missing params", 400, {'Content-Type':'text/plain'})
@@ -84,13 +85,19 @@ def cmd_task_new():
         summary = in_obj['summary']
         image = binascii.unhexlify(in_obj['image'])
         image_ctype = in_obj['image_ctype']
-        questions = in_obj['questions']
+        template = in_obj['template']
         min_workers = int(in_obj['min_workers'])
         reward = int(in_obj['reward'])
 
         base58.b58decode_check(pkh)
     except:
         return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
+
+    # Check work template
+    wt = worktmp.WorkTemplate()
+    wt.set(template)
+    if not wt.valid():
+        return ("JSON template validation failed", 400, {'Content-Type':'text/plain'})
 
     # Generate unique id
     time_str = str(int(time.time()))
@@ -101,15 +108,14 @@ def cmd_task_new():
 
     # Add worker to database.  Rely on db to filter out dups.
     try:
-        questions_json = json.dumps(questions)
-        db.task_add(id, summary, pkh, image, image_ctype, questions_json, min_workers, reward)
+        template_json = json.dumps(template)
+        db.task_add(id, summary, pkh, image, image_ctype, template_json, min_workers, reward)
     except:
         return ("DB Exception - add task", 400, {'Content-Type':'text/plain'})
 
-    body = json.dumps(True, indent=2)
-    return (body, 200, {
+    return (id, 200, {
         'Content-length': len(body),
-        'Content-type': 'application/json',
+        'Content-type': 'text/plain',
     })
 
 @app.route('/worker.new', methods=['POST'])

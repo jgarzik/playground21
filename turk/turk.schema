@@ -12,7 +12,7 @@ CREATE TABLE tasks (
 	auth_pkh	TEXT NOT NULL,
 	image		BLOB NOT NULL,
 	image_ctype	TEXT NOT NULL,
-	questions_json	TEXT NOT NULL,
+	template_json	TEXT NOT NULL,
 	min_workers	INTEGER NOT NULL,
 	reward		INTEGER NOT NULL
 );

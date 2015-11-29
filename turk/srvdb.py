@@ -13,10 +13,10 @@ class SrvDb(object):
 
         cursor.execute("INSERT INTO workers VALUES(?, ?, 0, 0, 0)", (pkh, payout_addr))
 
-    def task_add(self, id, summary, pkh, image, image_ctype, questions, min_workers, reward):
+    def task_add(self, id, summary, pkh, image, image_ctype, template, min_workers, reward):
         cursor = self.connection.cursor()
 
-        cursor.execute("INSERT INTO tasks VALUES(?, ?, ?, ?, ?, ?, ?, ?)", (id, summary, pkh, image, image_ctype, questions, min_workers, reward))
+        cursor.execute("INSERT INTO tasks VALUES(?, ?, ?, ?, ?, ?, ?, ?)", (id, summary, pkh, image, image_ctype, template, min_workers, reward))
 
     def tasks(self):
         cursor = self.connection.cursor()
@@ -45,7 +45,7 @@ class SrvDb(object):
             'pkh': row[2],
             'image': binascii.hexlify(row[3]).decode('utf-8'),
             'image_ctype': row[4],
-            'questions': json.loads(row[5]),
+            'template': json.loads(row[5]),
             'min_workers': int(row[6]),
             'reward': int(row[7]),
         }

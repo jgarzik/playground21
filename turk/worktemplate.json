@@ -1,0 +1,8 @@
+{
+	"work_type": "image-question",
+	"questions": [
+		"What is the name of the street?"
+	],
+	"notes": "excluding suffixes such as St, Dr",
+	"keywords": ["image","english"]
+}
