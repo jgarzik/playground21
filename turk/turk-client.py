@@ -128,14 +128,30 @@ def cmd_update(ctx, name, pkh, records):
     answer = requests.post(url=sel_url.format(), headers=headers, data=body)
     print(answer.text)
 
-@click.command(name='newtask')
+@click.command(name='get.task')
+@click.argument('id')
+@click.pass_context
+def cmd_task_get(ctx, id):
+    sel_url = ctx.obj['endpoint'] + 'task/' + id
+    answer = requests.get(url=sel_url.format())
+    print(answer.text)
+
+@click.command(name='tasklist')
+@click.pass_context
+def cmd_task_list(ctx):
+    sel_url = ctx.obj['endpoint'] + 'tasks.list'
+    answer = requests.get(url=sel_url.format())
+    print(answer.text)
+
+@click.command(name='new.task')
+@click.argument('summary')
 @click.argument('imagefile', type=click.File('rb'))
 @click.argument('content_type')
 @click.argument('questionfile', type=click.File('r'))
 @click.argument('min_workers')
 @click.argument('reward')
 @click.pass_context
-def cmd_task_new(ctx, imagefile, content_type, questionfile, min_workers, reward):
+def cmd_task_new(ctx, summary, imagefile, content_type, questionfile, min_workers, reward):
     auth_pubkey = wallet.get_message_signing_public_key()
     auth_pkh = auth_pubkey.address()
 
@@ -143,11 +159,12 @@ def cmd_task_new(ctx, imagefile, content_type, questionfile, min_workers, reward
 
     req_obj = {
         'pkh': auth_pkh,
-	'image': binascii.hexlify(imagefile.read()).decode('utf-8'),
-	'image_ctype': content_type,
-	'questions': json.load(questionfile),
-	'min_workers': int(min_workers),
-	'reward': int(reward),
+        'summary': summary,
+        'image': binascii.hexlify(imagefile.read()).decode('utf-8'),
+        'image_ctype': content_type,
+        'questions': json.load(questionfile),
+        'min_workers': int(min_workers),
+        'reward': int(reward),
     }
 
     body = json.dumps(req_obj)
@@ -167,7 +184,7 @@ def cmd_register(ctx):
 
     req_obj = {
         'pkh': auth_pkh,
-	'payout_addr': wallet.get_payout_address(),
+        'payout_addr': wallet.get_payout_address(),
     }
 
     body = json.dumps(req_obj)
@@ -179,6 +196,8 @@ def cmd_register(ctx):
 
 main.add_command(cmd_info)
 main.add_command(cmd_task_new)
+main.add_command(cmd_task_get)
+main.add_command(cmd_task_list)
 main.add_command(cmd_register)
 
 if __name__ == "__main__":

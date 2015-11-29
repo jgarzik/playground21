@@ -8,6 +8,7 @@ CREATE TABLE workers (
 
 CREATE TABLE tasks (
 	id		TEXT PRIMARY KEY,
+	summary		TEXT NOT NULL,
 	auth_pkh	TEXT NOT NULL,
 	image		BLOB NOT NULL,
 	image_ctype	TEXT NOT NULL,
