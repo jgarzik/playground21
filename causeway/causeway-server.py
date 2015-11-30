@@ -5,8 +5,6 @@ Causeway Server - key/value storage server geared toward small files with ECSDA 
 Usage:
     python3 server.py
 '''
-
-
 import os, json, random, time, string
 from settings import DATABASE, PRICE, DATA_DIR, SERVER_PORT
 
@@ -17,6 +15,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 from two1.lib.wallet import Wallet
 from two1.lib.bitserv.flask import Payment
+
+from models import *
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DATABASE
@@ -33,9 +33,10 @@ def home():
     '''Return service, pricing and endpoint information'''
     home_obj = [{"name": "causeway/1",       # service 'causeway', version '1'
                  "pricing-type": "per-mb",   # pricing is listed per 1000000 bytes
-                 "pricing" : [{"rpc": "buy_storage",
+                 "pricing" : [{"rpc": "buy",
                                "per-req": 0,
-                               "per-mb": PRICE
+                               "per-unit": PRICE,
+                               "description": "1 MB hosting, 50 MB bandwidth, 1 year expiration"
                               },
                               {"rpc": "get",
                                "per-req": 0,
@@ -50,7 +51,9 @@ def home():
                               {"rpc": True,        # True indicates default
                                "per-req": 0,
                                "per-mb": 0
-                              }]
+                              }],
+                  "description": "This Causeway server provides microhosting services. Download the "\
+                  "client and server at https://github.com/jgarzik/playground21/archive/master.zip"
                 }
                ]
 
@@ -90,32 +93,69 @@ def price():
 @app.route('/buy')
 @payment.required(PRICE)
 def buy_hosting():
-    '''Returns selected file if payment is made.'''
+    '''Registers one hosting bucket to account on paid request.'''
     # extract account address from client request
     owner = request.args.get('address')
+    contact = request.args.get('contact')
 
     # check if user exists
     o = db.session.query(Owner).get(owner)
     if o is None:
-        return abort(500)
-    else:
-        # create sale record for address
-        s = Sale(owner, 1, 30, PRICE)
-        s.insert()
+        # create them
+        o = Owner(owner)
+        db.session.add(o)
+        db.session.commit()
 
-    body = json.dumps({'Purchase complete.'}, indent=2)
+    # owner should now exist,  create sale record for address
+    s = Sale(owner, contact, 1, 30, PRICE)
+    db.session.add(s)
+    db.session.commit()
+
+    body = json.dumps({'result': 'success', 
+                       'buckets': s.get_buckets()}, indent=2)
     return (body, 200, {'Content-length': len(body),
                         'Content-type': 'application/json',
                        }
            )
 
-@app.route('/put', methods=['POST'])
+@app.route('/put', methods=['PUT'])
 def put():
     '''Store a key-value pair.'''
     # get size of file sent
+    print(dir(request.args))
+    key = request.args.get('key', '')
+    value = request.args.get('value', '')
+    owner = request.args.get('address', '')
+    # nonce = request.get_json().get('nonce', '')
+    # signature = request.get_json().get('signature', '')
+
+    size = len(key) + len(value)
+
     # check if owner has enough free storage
-    # store file in db
-    return
+    # get free space from each of owner's buckets
+    result = db.engine.execute('select * from sale where julianday("now") - julianday(sale.created) < sale.term order by sale.created desc')
+    # choose newest bucket that has enough space
+    sale_id = None
+    for row in result:
+        if (row[7] + size) < (1024 * 1024):
+            sale_id = row[0]
+    # db.session.query(Owner).get(request.post('address'))
+
+    if sale_id is None:     # we couldn't find enough free space
+        body = json.dumps({'error': 'Insufficient storage space.'})
+    else:
+        kv = Kv(key, value, sale_id)
+        db.session.add(kv)
+        db.session.commit()
+        s = db.session.query(Sale).get(sale_id)
+        s.bytes_used = s.bytes_used + size
+        db.session.commit()
+        body = json.dumps({'result': 'success'})
+    
+    return (body, 200, {'Content-length': len(body),
+                        'Content-type': 'application/json',
+                       }
+           )
 
 @app.route('/get')
 def get():
@@ -133,7 +173,6 @@ def delete():
 @app.route('/nonce')
 def nonce():
     '''Return 32-byte nonce for generating non-reusable signatures..'''
-    from models import Owner
 
     # check if user exists
     o = db.session.query(Owner).get(request.args.get('address'))
@@ -159,8 +198,6 @@ def nonce():
 @app.route('/address')
 def get_deposit_address():
     '''Return new or unused deposit address for on-chain funding.'''
-    from models import Owner
-
     # check if user exists
     o = db.session.query(Owner).get(request.args.get('address'))
     if o is None:

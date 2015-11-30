@@ -53,6 +53,15 @@ This project is for a server that will store and return data for a certain amoun
         
 Note: nonce will later be stored until used or next nonce generated for address
 
+### /buy
+    Parameters
+        contact - email address to notify on expiration
+        address - owner of new hosting bucket
+
+    Returns
+        result - success or error
+        buckets - listing free space, reamining bandwidth, and expiration
+
 ## Installation
 
 ### raspbian
