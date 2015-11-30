@@ -13,6 +13,16 @@ class SrvDb(object):
 
         cursor.execute("INSERT INTO workers VALUES(?, ?, 0, 0, 0)", (pkh, payout_addr))
 
+    def worker_inc_req(self, pkh):
+        cursor = self.connection.cursor()
+
+        cursor.execute("UPDATE workers SET tasks_req = tasks_req + 1 WHERE auth_pkh = ?", (pkh,))
+
+    def worker_inc_done(self, pkh):
+        cursor = self.connection.cursor()
+
+        cursor.execute("UPDATE workers SET tasks_done = tasks_done + 1 WHERE auth_pkh = ?", (pkh,))
+
     def worker_get(self, pkh):
         cursor = self.connection.cursor()
 

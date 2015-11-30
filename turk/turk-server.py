@@ -67,6 +67,8 @@ def get_task(id):
         task = db.task_get(id)
         if task is None:
             abort(404)
+
+        db.worker_inc_req(pkh_str)
     except:
         abort(500)
 
@@ -142,6 +144,7 @@ def cmd_task_submit():
     try:
         answers_json = json.dumps(answers)
         db.answer_add(id, pkh, answers_json)
+        db.worker_inc_done(pkh)
     except:
         return ("Initial answer storage failed", 400, {'Content-Type':'text/plain'})
 
