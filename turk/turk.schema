@@ -14,13 +14,15 @@ CREATE TABLE tasks (
 	image_ctype	TEXT NOT NULL,
 	template_json	TEXT NOT NULL,
 	min_workers	INTEGER NOT NULL,
-	reward		INTEGER NOT NULL
+	reward		INTEGER NOT NULL,
+	time_create	INTEGER NOT NULL
 );
 
 CREATE TABLE answers (
 	id		TEXT NOT NULL,
 	worker_pkh	TEXT NOT NULL,
-	answers_json	TEXT NOT NULL
+	answers_json	TEXT NOT NULL,
+	time_submit	INTEGER NOT NULL
 );
 
 CREATE INDEX answers_idx ON answers (id);

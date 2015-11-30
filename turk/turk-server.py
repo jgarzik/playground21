@@ -33,6 +33,15 @@ app = Flask(__name__)
 wallet = Wallet()
 payment = Payment(app, wallet)
 
+def check_timestamp(tstamp):
+    curtime = int(time.time())
+    min_time = min(tstamp, curtime)
+    max_time = max(tstamp, curtime)
+    time_diff = max_time - min_time
+    if (time_diff > 15):
+        return False
+    return True
+
 @app.route('/task/<id>')
 @payment.required(int(USCENT / 100))
 def get_task(id):
@@ -41,11 +50,7 @@ def get_task(id):
         sig_str = request.headers.get('X-Bitcoin-Sig')
 
         tstamp = int(request.headers.get('X-Timestamp'))
-        curtime = int(time.time())
-        min_time = min(tstamp, curtime)
-        max_time = max(tstamp, curtime)
-        time_diff = max_time - min_time
-        if (time_diff > 15):
+        if not check_timestamp(tstamp):
             return ("Clock drift", 403, {'Content-Type':'text/plain'})
 
         msg = util.hash_task_phdr(id, pkh_str, tstamp)
@@ -66,6 +71,83 @@ def get_task(id):
         abort(500)
 
     body = json.dumps(task, indent=2)
+    return (body, 200, {
+        'Content-length': len(body),
+        'Content-type': 'application/json',
+    })
+
+@app.route('/task', methods=['POST'])
+@payment.required(USCENT * 1)
+def cmd_task_submit():
+
+    # Validate JSON body w/ API params
+    try:
+        body = request.data.decode('utf-8')
+        in_obj = json.loads(body)
+    except:
+        return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
+
+    # Validate JSON object basics
+    try:
+        if (not 'pkh' in in_obj or
+            not 'id' in in_obj or
+            not 'tstamp' in in_obj or
+            not 'answers' in in_obj):
+            return ("Missing params", 400, {'Content-Type':'text/plain'})
+
+        sig_str = request.headers.get('X-Bitcoin-Sig')
+
+        pkh = in_obj['pkh']
+        id = in_obj['id']
+        tstamp = int(in_obj['tstamp'])
+        answers = in_obj['answers']
+
+        base58.b58decode_check(pkh)
+        if not check_timestamp(tstamp):
+            return ("Clock drift", 403, {'Content-Type':'text/plain'})
+    except:
+        return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
+
+    # Validate signature
+    try:
+        if not sig_str or not wallet.verify_bitcoin_message(body, sig_str, pkh):
+            return ("Permission denied", 403, {'Content-Type':'text/plain'})
+    except:
+        return ("Permission denied", 403, {'Content-Type':'text/plain'})
+
+    # Validate known worker and task
+    try:
+        worker = db.worker_get(pkh)
+        if worker is None:
+            return ("Permission denied", 403, {'Content-Type':'text/plain'})
+
+        task = db.task_get(id)
+        if task is None:
+            abort(404)
+    except:
+        abort(500)
+
+    # Self-check work template
+    wt = worktmp.WorkTemplate()
+    wt.set(task['template'])
+    if not wt.valid():
+        return ("JSON template self-validation failed", 500, {'Content-Type':'text/plain'})
+
+    # Validate answers match work template
+    wt.set_answers(answers)
+    if not wt.answers_valid():
+        return ("JSON answers validation failed", 400, {'Content-Type':'text/plain'})
+
+    # Store answer in db
+    try:
+        answers_json = json.dumps(answers)
+        db.answer_add(id, pkh, answers_json)
+    except:
+        return ("Initial answer storage failed", 400, {'Content-Type':'text/plain'})
+
+    # FIXME TODO
+
+    body = json.dumps(True, indent=2)
     return (body, 200, {
         'Content-length': len(body),
         'Content-type': 'application/json',

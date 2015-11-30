@@ -10,6 +10,9 @@ class WorkTemplate(object):
     def set(self, obj_in):
         self.obj = obj_in
 
+    def set_answers(self, obj_in):
+        self.answers = obj_in
+
     def load(self, str_in):
         self.obj = json.loads(str_in)
 
@@ -28,6 +31,20 @@ class WorkTemplate(object):
 
         return True
 
+    def valid_answerlist(self):
+        if (not 'answers' in self.answers or
+            not isinstance(self.answers['answers'], list)):
+            return False
+
+        if len(self.obj['questions']) != len(self.answers['answers']):
+            return False
+
+        for a in self.answers['answers']:
+            if not isinstance(a, str):
+                return False
+
+        return True
+
     def valid(self):
         if (self.obj is None or
             not 'work_type' in self.obj or
@@ -43,6 +60,18 @@ class WorkTemplate(object):
         wt = self.obj['work_type']
         if wt == 'image-question':
             return self.valid_questionlist()
+
+        return False
+
+    def answers_valid(self):
+        if (self.answers is None or
+            not 'work_type' in self.answers or
+            not isinstance(self.answers['work_type'], str)):
+            return False
+
+        wt = self.answers['work_type']
+        if wt == 'image-question':
+            return self.valid_answerlist()
 
         return False
 

@@ -31,18 +31,20 @@ class SrvDb(object):
     def task_add(self, id, summary, pkh, image, image_ctype, template, min_workers, reward):
         cursor = self.connection.cursor()
 
-        cursor.execute("INSERT INTO tasks VALUES(?, ?, ?, ?, ?, ?, ?, ?)", (id, summary, pkh, image, image_ctype, template, min_workers, reward))
+        tstamp = int(time.time())
+        cursor.execute("INSERT INTO tasks VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, summary, pkh, image, image_ctype, template, min_workers, reward, tstamp))
 
     def tasks(self):
         cursor = self.connection.cursor()
 
         tasks = []
-        for row in cursor.execute("SELECT id,summary,min_workers,reward FROM tasks"):
+        for row in cursor.execute("SELECT id,summary,min_workers,reward,time_create FROM tasks ORDER BY time_create DESC"):
             obj = {
                 'id': row[0],
                 'summary': row[1],
                 'min_workers': int(row[2]),
                 'reward': int(row[3]),
+                'time_create': int(row[4]),
             }
             tasks.append(obj)
 
@@ -63,6 +65,13 @@ class SrvDb(object):
             'template': json.loads(row[5]),
             'min_workers': int(row[6]),
             'reward': int(row[7]),
+            'time_create': int(row[8]),
         }
         return obj
+
+    def answer_add(self, id, pkh, answers):
+        cursor = self.connection.cursor()
+
+        tstamp = int(time.time())
+        cursor.execute("INSERT INTO answers VALUES(?, ?, ?, ?)", (id, pkh, answers, tstamp))
 

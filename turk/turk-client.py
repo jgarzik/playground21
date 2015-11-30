@@ -57,6 +57,41 @@ def cmd_info(ctx):
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 
+@click.command(name='submit.task')
+@click.argument('id')
+@click.argument('pkh')
+@click.argument('answersfile', type=click.File('r'))
+@click.pass_context
+def cmd_task_submit(ctx, id, pkh, answersfile):
+    try:
+        answers_obj = json.load(answersfile)
+    except:
+        print("Unable to decode JSON work answers")
+        sys.exit(1)
+
+    tstamp = int(time.time())
+    req_obj = {
+        'pkh': pkh,
+        'id': id,
+        'tstamp': tstamp,
+        'answers': answers_obj,
+    }
+
+    body = json.dumps(req_obj)
+
+    sig_str = wallet.sign_bitcoin_message(body, pkh)
+    if not wallet.verify_bitcoin_message(body, sig_str, pkh):
+        print("Error: cannot self-verify signed message")
+        sys.exit(1)
+
+    sel_url = ctx.obj['endpoint'] + 'task'
+    headers = {
+        'Content-Type': 'application/json',
+        'X-Bitcoin-Sig': sig_str,
+    }
+    answer = requests.post(url=sel_url.format(), headers=headers, data=body)
+    print(answer.text)
+
 @click.command(name='get.task')
 @click.argument('id')
 @click.argument('pkh')
@@ -153,6 +188,7 @@ def cmd_register(ctx):
 main.add_command(cmd_info)
 main.add_command(cmd_task_new)
 main.add_command(cmd_task_get)
+main.add_command(cmd_task_submit)
 main.add_command(cmd_task_list)
 main.add_command(cmd_register)
 
