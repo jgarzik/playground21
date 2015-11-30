@@ -13,6 +13,21 @@ class SrvDb(object):
 
         cursor.execute("INSERT INTO workers VALUES(?, ?, 0, 0, 0)", (pkh, payout_addr))
 
+    def worker_get(self, pkh):
+        cursor = self.connection.cursor()
+
+        row = cursor.execute("SELECT * FROM workers WHERE auth_pkh = ?", (pkh,)).fetchone()
+        if row is None:
+            return None
+        obj = {
+            'pkh': pkh,
+            'payout_addr': row[1],
+            'tasks_req': int(row[2]),
+            'tasks_done': int(row[3]),
+            'tasks_accepted': int(row[4]),
+        }
+        return obj
+
     def task_add(self, id, summary, pkh, image, image_ctype, template, min_workers, reward):
         cursor = self.connection.cursor()
 

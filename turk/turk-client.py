@@ -9,8 +9,11 @@ import os
 import sys
 import click
 import binascii
+import time
 import pprint
+
 import worktmp
+import util
 
 # import from the 21 Developer Library
 from two1.commands.config import Config
@@ -56,10 +59,25 @@ def cmd_info(ctx):
 
 @click.command(name='get.task')
 @click.argument('id')
+@click.argument('pkh')
 @click.pass_context
-def cmd_task_get(ctx, id):
+def cmd_task_get(ctx, id, pkh):
+    # Build, hash and sign pseudo-header
+    tstamp = int(time.time())
+    msg = util.hash_task_phdr(id, pkh, tstamp)
+    sig_str = wallet.sign_bitcoin_message(msg, pkh)
+    if not wallet.verify_bitcoin_message(msg, sig_str, pkh):
+        print("Error: cannot self-verify signed message")
+        sys.exit(1)
+
+    # Send request to endpoint
     sel_url = ctx.obj['endpoint'] + 'task/' + id
-    answer = requests.get(url=sel_url.format())
+    headers = {
+        'X-Bitcoin-PKH': pkh,
+        'X-Bitcoin-Sig': sig_str,
+        'X-Timestamp': str(tstamp),
+    }
+    answer = requests.get(url=sel_url.format(), headers=headers)
     print(answer.text)
 
 @click.command(name='tasklist')

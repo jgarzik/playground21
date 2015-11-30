@@ -8,7 +8,9 @@ import base58
 import ipaddress
 import pprint
 import time
+
 import worktmp
+import util
 
 # import flask web microframework
 from flask import Flask
@@ -35,7 +37,31 @@ payment = Payment(app, wallet)
 @payment.required(int(USCENT / 100))
 def get_task(id):
     try:
+        pkh_str = request.headers.get('X-Bitcoin-PKH')
+        sig_str = request.headers.get('X-Bitcoin-Sig')
+
+        tstamp = int(request.headers.get('X-Timestamp'))
+        curtime = int(time.time())
+        min_time = min(tstamp, curtime)
+        max_time = max(tstamp, curtime)
+        time_diff = max_time - min_time
+        if (time_diff > 15):
+            return ("Clock drift", 403, {'Content-Type':'text/plain'})
+
+        msg = util.hash_task_phdr(id, pkh_str, tstamp)
+        if not wallet.verify_bitcoin_message(msg, sig_str, pkh_str):
+            return ("Permission denied", 403, {'Content-Type':'text/plain'})
+    except:
+        return ("Permission denied", 403, {'Content-Type':'text/plain'})
+
+    try:
+        worker = db.worker_get(pkh_str)
+        if worker is None:
+            return ("Permission denied", 403, {'Content-Type':'text/plain'})
+
         task = db.task_get(id)
+        if task is None:
+            abort(404)
     except:
         abort(500)
 
