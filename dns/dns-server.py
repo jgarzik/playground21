@@ -37,7 +37,7 @@ def valid_name(name):
         return False
     return True
 
-@app.route('/domains')
+@app.route('/dns/1/domains')
 def get_domains():
     try:
         domains = db.domains()
@@ -94,7 +94,7 @@ def get_price_register(request):
 
     return price
 
-@app.route('/host.register', methods=['POST'])
+@app.route('/dns/1/host.register', methods=['POST'])
 @payment.required(get_price_register)
 def cmd_host_register():
 
@@ -145,7 +145,7 @@ def cmd_host_register():
         'Content-type': 'application/json',
     })
 
-@app.route('/host.update', methods=['POST'])
+@app.route('/dns/1/host.update', methods=['POST'])
 @payment.required(int(USCENT / 3))
 def cmd_host_update():
 
@@ -204,7 +204,7 @@ def cmd_host_update():
         'Content-type': 'application/json',
     })
 
-@app.route('/host.delete', methods=['POST'])
+@app.route('/dns/1/host.delete', methods=['POST'])
 def cmd_host_delete():
 
     # Validate JSON body w/ API params
@@ -259,25 +259,30 @@ def cmd_host_delete():
 
 @app.route('/')
 def get_info():
-    info_obj = {
-        "name": "dns",
-        "version": 100,
+    # API endpoint metadata - export list of services
+    info_obj = {[
+        "name": "dns/1",
+        "pricing-type": "per-rpc",
         "pricing": {
-            "/domains" : {
-                "minimum" : 0
+            {
+                "rpc": "domains",
+                "per-req": 0,
             },
-            "/host.register" : {
-                "minimum" : int(USCENT / 10)
+            {
+                "rpc": "host.register",
+                "per-day": int(USCENT / 10),
             },
-            "/host.update" : {
-                "minimum" : int(USCENT / 3)
+            {
+                "rpc": "host.update",
+                "per-req": int(USCENT / 3),
             },
-            "/host.delete" : {
-                "minimum" : 0
+            {
+                "rpc": "host.delete",
+                "per-req": 0,
             },
         }
+    ]}
 
-    }
     body = json.dumps(info_obj, indent=2)
     return (body, 200, {
         'Content-length': len(body),

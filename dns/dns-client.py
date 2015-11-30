@@ -55,7 +55,7 @@ def cmd_info(ctx):
 @click.command(name='domains')
 @click.pass_context
 def cmd_domains(ctx):
-    sel_url = ctx.obj['endpoint'] + 'domains'
+    sel_url = ctx.obj['endpoint'] + 'dns/1/domains'
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 
@@ -87,7 +87,7 @@ def cmd_register(ctx, name, days, recordlist):
         'hosts': records,
     }
 
-    sel_url = ctx.obj['endpoint'] + 'host.register'
+    sel_url = ctx.obj['endpoint'] + 'dns/1/host.register'
     body = json.dumps(req_obj)
     headers = {'Content-Type': 'application/json'}
     answer = requests.post(url=sel_url.format(), headers=headers, data=body)
@@ -119,7 +119,7 @@ def cmd_update(ctx, name, pkh, records):
         print("Cannot self-verify message")
         sys.exit(1)
 
-    sel_url = ctx.obj['endpoint'] + 'host.update'
+    sel_url = ctx.obj['endpoint'] + 'dns/1/host.update'
     headers = {
         'Content-Type': 'application/json',
         'X-Bitcoin-Sig': sig_str,
@@ -143,7 +143,7 @@ def cmd_delete(ctx, name, pkh):
         print("Cannot self-verify message")
         sys.exit(1)
 
-    sel_url = ctx.obj['endpoint'] + 'host.delete'
+    sel_url = ctx.obj['endpoint'] + 'dns/1/host.delete'
     headers = {
         'Content-Type': 'application/json',
         'X-Bitcoin-Sig': sig_str,

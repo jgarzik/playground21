@@ -46,7 +46,7 @@ API
 -------------------
 Show DNS domains, e.g. "example.com", available for use at this service.
 
-HTTP URI: GET /domains
+HTTP URI: GET /dns/1/domains
 
 Params:
 
@@ -66,7 +66,7 @@ Pricing:
 
 2. Register host name
 ---------------------
-HTTP URI: POST /host.register
+HTTP URI: POST /dns/1/host.register
 
 Params:
 
@@ -96,7 +96,7 @@ Pricing:
 Replace _all_ DNS records associated a host, with the specified list.  An
 empty list deletes all records.
 
-HTTP URI: POST /host.update
+HTTP URI: POST /dns/1/host.update
 
 Params:
 
@@ -126,7 +126,7 @@ Pricing:
 --------------
 Remove _all_ DNS records associated a host, as well as the host itself.
 
-HTTP URI: POST /host.delete
+HTTP URI: POST /dns/1/host.delete
 
 Params:
 
