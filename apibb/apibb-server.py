@@ -29,7 +29,7 @@ def expire_names():
     cursor = connection.cursor()
     cursor.execute("DELETE FROM names WHERE expires < datetime('now')")
 
-@app.route('/names')
+@app.route('/apibb/1/names')
 @payment.required(1)
 def get_names():
     cursor = connection.cursor()
@@ -61,13 +61,13 @@ def get_renew_price_from_req(request):
 
     hours = int(request.args.get('hours'))
 
-    price = hours * 10		# 10 satoshis per hour
+    price = hours * 10                # 10 satoshis per hour
 
     if price < 10:
         price = 10
     return price
 
-@app.route('/namerenew')
+@app.route('/apibb/1/namerenew')
 @payment.required(get_renew_price_from_req)
 def name_renew():
     if not valid_renewal(request):
@@ -128,13 +128,13 @@ def get_advertise_price_from_req(request):
 
     hours = int(request.args.get('hours'))
 
-    price = hours * 2		# 2 satoshis per hour
+    price = hours * 2                # 2 satoshis per hour
 
     if price < 2:
         price = 2
     return price
 
-@app.route('/advertise')
+@app.route('/apibb/1/advertise')
 @payment.required(get_advertise_price_from_req)
 def advertise():
     cursor = connection.cursor()
@@ -150,7 +150,7 @@ def advertise():
 
     return "OK"
 
-@app.route('/ads')
+@app.route('/apibb/1/ads')
 @payment.required(1)
 def get_advertisements():
     name = request.args.get('name')
@@ -170,25 +170,32 @@ def get_advertisements():
 
 @app.route('/')
 def get_info():
-    info_obj = {
-        "name": "apibb",
-        "version": 100,
-        "pricing": {
-            "/names" : {
-                "minimum" : 1
+    # API endpoint metadata - export list of services
+    info_obj = {[
+        "name": "apibb/1",                # service 'apibb', version '1'
+        "pricing-type": "per-rpc",        # indicates layout of 'pricing'
+        "pricing": [
+            {
+                "rpc": "names",
+                "per-req": 1,             # 1 satoshi per request
             },
-            "/namerenew" : {
-                "minimum" : 10
+            {
+                "rpc": "namerenew",
+                "per-hour": 10,           # 10 satoshis per hour
+                "minimum": 10,            # 10 satoshi minimum
             },
-            "/advertise" : {
-                "minimum" : 2
+            {
+                "rpc": "ads",
+                "per-req": 1,             # 1 satoshi per request
             },
-            "/ads" : {
-                "minimum" : 1
+            {
+                "rpc": "advertise",
+                "per-hour": 2,            # 2 satoshis per hour
+                "minimum": 2,             # 2 satoshi minimum
             },
-        }
+        ]
+    ]}
 
-    }
     body = json.dumps(info_obj, indent=2)
     return (body, 200, {
         'Content-length': len(body),
