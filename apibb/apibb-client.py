@@ -55,7 +55,7 @@ def cmd_info(ctx):
 @click.command(name='names')
 @click.pass_context
 def cmd_get_names(ctx):
-    sel_url = ctx.obj['endpoint'] + 'names'
+    sel_url = ctx.obj['endpoint'] + 'apibb/1/names'
     answer = requests.get(url=sel_url.format())
     print(answer.text)
 
@@ -64,7 +64,7 @@ def cmd_get_names(ctx):
 @click.argument('hours')
 @click.pass_context
 def cmd_name_renew(ctx, name, hours):
-    sel_url = ctx.obj['endpoint'] + 'namerenew?name={0}&hours={1}'
+    sel_url = ctx.obj['endpoint'] + 'apibb/1/namerenew?name={0}&hours={1}'
     answer = requests.get(url=sel_url.format(name, hours))
     print(answer.text)
 
@@ -72,7 +72,7 @@ def cmd_name_renew(ctx, name, hours):
 @click.argument('name')
 @click.pass_context
 def cmd_get_ads(ctx, name):
-    sel_url = ctx.obj['endpoint'] + 'ads?name={0}'
+    sel_url = ctx.obj['endpoint'] + 'apibb/1/ads?name={0}'
     answer = requests.get(url=sel_url.format(name))
     print(answer.text)
 
@@ -83,7 +83,7 @@ def cmd_get_ads(ctx, name):
 @click.argument('hours')
 @click.pass_context
 def cmd_advertise(ctx, name, uri, pubkey, hours):
-    sel_url = ctx.obj['endpoint'] + 'advertise?name={0}&uri={1}&pubkey={2}&hours={3}'
+    sel_url = ctx.obj['endpoint'] + 'apibb/1/advertise?name={0}&uri={1}&pubkey={2}&hours={3}'
     answer = requests.get(url=sel_url.format(name, uri, pubkey, hours))
     print(answer.text)
 

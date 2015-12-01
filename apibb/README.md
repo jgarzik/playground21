@@ -77,7 +77,7 @@ API;
 1. Get list of names
 --------------------
 
-HTTP URI: /names
+HTTP URI: /apibb/1/names
 
 Params:
 
@@ -95,7 +95,7 @@ Pricing:
 2. Create a name / renew name
 -----------------------------
 
-HTTP URI: /namerenew
+HTTP URI: /apibb/1/namerenew
 
 Params:
 
@@ -115,7 +115,7 @@ Pricing:
 3. Show all nodes advertising a service
 ---------------------------------------
 
-HTTP URI: /ads
+HTTP URI: /apibb/1/ads
 
 Params:
 
@@ -134,7 +134,7 @@ Pricing:
 4. Advertise a service
 ----------------------
 
-HTTP URI: /advertise
+HTTP URI: /apibb/1/advertise
 
 Params:
 

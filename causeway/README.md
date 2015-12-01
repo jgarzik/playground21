@@ -53,6 +53,15 @@ This project is for a server that will store and return data for a certain amoun
         
 Note: nonce will later be stored until used or next nonce generated for address
 
+### /buy
+    Parameters
+        contact - email address to notify on expiration
+        address - owner of new hosting bucket
+
+    Returns
+        result - success or error
+        buckets - listing free space, reamining bandwidth, and expiration
+
 ## Installation
 
 ### raspbian
@@ -67,10 +76,11 @@ Then you'll need to copy default\_settings.py to settings.py and change DATABASE
 ***
 ** Roadmap **
 
-* All storage expires after one year. Extended by uploading the same data. 
-* Data is kept if bandwidth is exceeded just no longer served until balance is increased.
-    
-
+* Hosting is purchased in buckets which expire after one month.
+* A bucket holds 1 MB of data and comes with 50 MB of transfer.
+* If a bucket expires, key/values are redistributed to an owner's newer buckets if possible,
+  otherwise, the owner is notified via email that expiration is affecting hosting.
+* Data is kept if bandwidth is exceeded just no longer served until more is purchased.
 
 ### /balance
     Parameters
@@ -89,7 +99,7 @@ Then you'll need to copy default\_settings.py to settings.py and change DATABASE
         key - the key that was requested
         value - the last value stored for the key
         
-Note: Charges bandwidth against key/value submitter's account.
+Note: Charges bandwidth against sale record associated with key/value.
         
 ### /put (POST)
     Parameters
@@ -103,3 +113,11 @@ Note: Charges bandwidth against key/value submitter's account.
     Returns
         status - "success" or "error: " + error reason
             Possible error reasons
+
+### /delete
+    Parameters
+        key - string
+        address - account that owns this key
+        nonce = latest unused 32-byte string retrieved via /nonce
+        signature - signature over concat(key + address + nonce) by 
+            private key for address

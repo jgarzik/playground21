@@ -1,0 +1,20 @@
+CREATE TABLE domains (
+	name		TEXT PRIMARY KEY
+);
+
+CREATE TABLE hosts (
+	name		TEXT PRIMARY KEY,
+	time_create     INTEGER NOT NULL,
+	time_expire     INTEGER NOT NULL,
+	owner_pkh	TEXT
+);
+
+CREATE TABLE records (
+	name		TEXT NOT NULL,
+	rec_type	TEXT NOT NULL,
+	value		TEXT NOT NULL,
+	ttl		INTEGER NOT NULL
+);
+
+CREATE INDEX record_idx ON records (name);
+

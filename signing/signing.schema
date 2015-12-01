@@ -1,0 +1,6 @@
+CREATE TABLE metadata (
+	hd_index	INTEGER PRIMARY KEY,
+	address		TEXT NOT NULL,
+	pubkey		TEXT NOT NULL,
+	owner_pubkey	TEXT NOT NULL
+);
