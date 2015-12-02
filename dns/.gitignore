@@ -1,4 +1,10 @@
 
 __pycache__/
 dns.db
+dns-server.conf
+
+nsupdate.log
+
+*.key
+*.private
 

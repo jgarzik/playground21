@@ -5,6 +5,8 @@ import srvdb
 import re
 import base58
 import ipaddress
+import subprocess
+import time
 import pprint
 from httputil import httpjson, http400, http404, http500
 
@@ -19,11 +21,17 @@ from two1.lib.bitcoin.crypto import PublicKey
 from two1.lib.wallet import Wallet, exceptions
 from two1.lib.bitserv.flask import Payment
 
+server_config = json.load(open("dns-server.conf"))
+
 USCENT=2801
+DNS_SERVER1=server_config["DNS_SERVER1"]
+NSUPDATE_KEYFILE=server_config["NSUPDATE_KEYFILE"]
+NSUPDATE_LOG=server_config["NSUPDATE_LOG"]
+nsupdate_logging=server_config["NSUPDATE_LOGGING"]
 
 pp = pprint.PrettyPrinter(indent=2)
 
-db = srvdb.SrvDb('dns.db')
+db = srvdb.SrvDb(server_config["DB_PATHNAME"])
 
 app = Flask(__name__)
 wallet = Wallet()
@@ -43,6 +51,46 @@ def reserved_name(name):
     if name_ns_re.match(name):
         return True
     return False
+
+def nsupdate_cmd(name, domain, host_records):
+    pathname = "%s.%s." % (name, domain)
+
+    cmd = "server %s\n" % (DNS_SERVER1,)
+    cmd += "zone %s.\n" % (domain,)
+    cmd += "update delete %s\n" % (pathname,)
+
+    for rec in host_records:
+        cmd += "update add %s %d %s %s\n" % (pathname, rec[4], rec[2], rec[3])
+
+    cmd += "show\n"
+    cmd += "send\n"
+
+    return cmd.encode('utf-8')
+
+def nsupdate_exec(name, domain, host_records):
+    nsupdate_input = nsupdate_cmd(name, domain, host_records)
+    args = [
+        "/usr/bin/nsupdate",
+        "-k", NSUPDATE_KEYFILE,
+        "-v",
+    ]
+    proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        outs, errs = proc.communicate(input=nsupdate_input, timeout=10)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        outs, errs = proc.communicate(input=nsupdate_input)
+
+    if nsupdate_logging:
+        with open(NSUPDATE_LOG, 'a') as f:
+            f.write("timestamp %lu\n" % (int(time.time()),))
+            f.write(outs.decode('utf-8') + "\n")
+            f.write(errs.decode('utf-8') + "\n")
+            f.write("---------------------------------------------\n")
+
+    if proc.returncode is None or proc.returncode != 0:
+        return False
+    return True
 
 @app.route('/dns/1/domains')
 def get_domains():
@@ -146,6 +194,8 @@ def cmd_host_register():
     try:
         db.add_host(name, domain, days, pkh)
         if len(host_records) > 0:
+            if not nsupdate_exec(name, domain, host_records):
+                http500("nsupdate failure")
             db.update_records(name, domain, host_records)
     except:
         return http400("Host addition rejected")
@@ -205,6 +255,8 @@ def cmd_host_update():
 
     # Add to database.  Rely on db to filter out dups.
     try:
+        if not nsupdate_exec(name, domain, host_records):
+            http500("nsupdate failure")
         db.update_records(name, domain, host_records)
     except:
         return http400("DB Exception")
@@ -258,6 +310,8 @@ def cmd_host_delete():
 
     # Remove from database.  Rely on db to filter out dups.
     try:
+        if not nsupdate_exec(name, domain, []):
+            http500("nsupdate failure")
         db.delete_host(name, domain)
     except:
         return http400("DB Exception - delete host")
