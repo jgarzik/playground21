@@ -6,6 +6,7 @@ import re
 import base58
 import ipaddress
 import pprint
+from httputil import httpjson, http400, http404, http500
 
 # import flask web microframework
 from flask import Flask
@@ -44,11 +45,7 @@ def get_domains():
     except:
         abort(500)
 
-    body = json.dumps(domains, indent=2)
-    return (body, 200, {
-        'Content-length': len(body),
-        'Content-type': 'application/json',
-    })
+    return httpjson(domains)
 
 def parse_hosts(name, in_obj):
     host_records = []
@@ -103,11 +100,11 @@ def cmd_host_register():
         body = request.data.decode('utf-8')
         in_obj = json.loads(body)
     except:
-        return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
+        return http400("JSON Decode failed")
 
     try:
         if (not 'name' in in_obj):
-            return ("Missing name", 400, {'Content-Type':'text/plain'})
+            return http400("Missing name")
 
         name = in_obj['name']
         pkh = None
@@ -118,18 +115,18 @@ def cmd_host_register():
             days = int(in_obj['days'])
 
         if not valid_name(name) or days < 1 or days > 365:
-            return ("Invalid name/days", 400, {'Content-Type':'text/plain'})
+            return http400("Invalid name/days")
         if pkh:
             base58.b58decode_check(pkh)
             if (len(pkh) < 20) or (len(pkh) > 40):
-                return ("Invalid pkh", 400, {'Content-Type':'text/plain'})
+                return http400("Invalid pkh")
     except:
-        return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
+        return http400("JSON validation exception")
 
     # Validate and collect host records for updating
     host_records = parse_hosts(name, in_obj)
     if isinstance(host_records, str):
-        return (host_records, 400, {'Content-Type':'text/plain'})
+        return http400(host_records)
 
     # Add to database.  Rely on db to filter out dups.
     try:
@@ -137,13 +134,9 @@ def cmd_host_register():
         if len(host_records) > 0:
             db.update_host(name, host_records)
     except:
-        return ("Host addition rejected", 400, {'Content-Type':'text/plain'})
+        return http400("Host addition rejected")
 
-    body = json.dumps(True, indent=2)
-    return (body, 200, {
-        'Content-length': len(body),
-        'Content-type': 'application/json',
-    })
+    return httpjson(True)
 
 @app.route('/dns/1/host.update', methods=['POST'])
 @payment.required(int(USCENT / 3))
@@ -154,55 +147,51 @@ def cmd_host_update():
         body = request.data.decode('utf-8')
         in_obj = json.loads(body)
     except:
-        return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
+        return http400("JSON Decode failed")
 
     # Validate JSON object basics
     try:
         if (not 'name' in in_obj or
             not 'hosts' in in_obj):
-            return ("Missing name/hosts", 400, {'Content-Type':'text/plain'})
+            return http400("Missing name/hosts")
 
         name = in_obj['name']
         if not valid_name(name):
-            return ("Invalid name", 400, {'Content-Type':'text/plain'})
+            return http400("Invalid name")
     except:
-        return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
+        return http400("JSON validation exception")
 
     # Validate and collect host records for updating
     host_records = parse_hosts(name, in_obj)
     if isinstance(host_records, str):
-        return (host_records, 400, {'Content-Type':'text/plain'})
+        return http400(host_records)
 
     # Verify host exists, and is not expired
     try:
         hostinfo = db.get_host(name)
         if hostinfo is None:
-            return ("Unknown name", 404, {'Content-Type':'text/plain'})
+            return http404("Unknown name")
     except:
-        return ("DB Exception", 500, {'Content-Type':'text/plain'})
+        return http500("DB Exception")
 
     # Check permission to update
     pkh = hostinfo['pkh']
     if pkh is None:
-        return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+        abort(403)
     sig_str = request.headers.get('X-Bitcoin-Sig')
     try:
         if not sig_str or not wallet.verify_bitcoin_message(body, sig_str, pkh):
-            return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+            abort(403)
     except:
-        return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+        abort(403)
 
     # Add to database.  Rely on db to filter out dups.
     try:
         db.update_host(name, host_records)
     except:
-        return ("DB Exception", 400, {'Content-Type':'text/plain'})
+        return http400("DB Exception")
 
-    body = json.dumps(True, indent=2)
-    return (body, 200, {
-        'Content-length': len(body),
-        'Content-type': 'application/json',
-    })
+    return httpjson(True)
 
 @app.route('/dns/1/host.delete', methods=['POST'])
 def cmd_host_delete():
@@ -212,55 +201,51 @@ def cmd_host_delete():
         body = request.data.decode('utf-8')
         in_obj = json.loads(body)
     except:
-        return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
+        return http400("JSON Decode failed")
 
     # Validate JSON object basics
     try:
         if (not 'name' in in_obj or
             not 'pkh' in in_obj):
-            return ("Missing name/pkh", 400, {'Content-Type':'text/plain'})
+            return http400("Missing name/pkh")
 
         name = in_obj['name']
         pkh = in_obj['pkh']
         if (not valid_name(name) or (len(pkh) < 10)):
-            return ("Invalid name", 400, {'Content-Type':'text/plain'})
+            return http400("Invalid name")
     except:
-        return ("JSON validation exception", 400, {'Content-Type':'text/plain'})
+        return http400("JSON validation exception")
 
     # Verify host exists, and is not expired
     try:
         hostinfo = db.get_host(name)
         if hostinfo is None:
-            return ("Unknown name", 404, {'Content-Type':'text/plain'})
+            return http404("Unknown name")
     except:
-        return ("DB Exception - get host", 500, {'Content-Type':'text/plain'})
+        return http500("DB Exception - get host")
 
     # Check permission to update
     if (hostinfo['pkh'] is None) or (pkh != hostinfo['pkh']):
-        return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+        abort(403)
     sig_str = request.headers.get('X-Bitcoin-Sig')
     try:
         if not sig_str or not wallet.verify_bitcoin_message(body, sig_str, pkh):
-            return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+            abort(403)
     except:
-        return ("Record update permission denied", 403, {'Content-Type':'text/plain'})
+        abort(403)
 
     # Remove from database.  Rely on db to filter out dups.
     try:
         db.delete_host(name)
     except:
-        return ("DB Exception - delete host", 400, {'Content-Type':'text/plain'})
+        return http400("DB Exception - delete host")
 
-    body = json.dumps(True, indent=2)
-    return (body, 200, {
-        'Content-length': len(body),
-        'Content-type': 'application/json',
-    })
+    return httpjson(True)
 
 @app.route('/')
 def get_info():
     # API endpoint metadata - export list of services
-    info_obj = {[
+    info_obj = [{
         "name": "dns/1",
         "pricing-type": "per-rpc",
         "pricing": {
@@ -281,13 +266,8 @@ def get_info():
                 "per-req": 0,
             },
         }
-    ]}
-
-    body = json.dumps(info_obj, indent=2)
-    return (body, 200, {
-        'Content-length': len(body),
-        'Content-type': 'application/json',
-    })
+    }]
+    return httpjson(info_obj)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=12005)
