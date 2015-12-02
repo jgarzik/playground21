@@ -2,9 +2,9 @@
 dns - Dynamic DNS management service
 ====================================
 
-Summary:  DNS db management service, suitable for proxying to e.g. Namecheap
+Summary:  Dynamic DNS domain management system
 
-Once connected to your favorite dynamic DNS API, this server enables you to
+Once connected to your BIND9 DNS servers, this server enables you to
 monetize your domain by selling 
 
 	YOUR-NAME-HERE.example.com
