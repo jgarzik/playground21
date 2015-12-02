@@ -324,7 +324,7 @@ def get_info():
     info_obj = [{
         "name": "dns/1",
         "pricing-type": "per-rpc",
-        "pricing": {
+        "pricing": [
             {
                 "rpc": "domains",
                 "per-req": 0,
@@ -341,7 +341,7 @@ def get_info():
                 "rpc": "host.delete",
                 "per-req": 0,
             },
-        }
+        ]
     }]
     return httpjson(info_obj)
 
