@@ -44,7 +44,7 @@ API
 
 0. Show endpoint API metadata
 -----------------------------
-HTTP URI: GET /dns/1/domains
+HTTP URI: GET /
 
 Params:
 
