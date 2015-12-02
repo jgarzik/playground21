@@ -23,7 +23,7 @@ from two1.lib.bitserv.flask import Payment
 
 server_config = json.load(open("dns-server.conf"))
 
-USCENT=2801
+USCENT=2824
 DNS_SERVER1=server_config["DNS_SERVER1"]
 NSUPDATE_KEYFILE=server_config["NSUPDATE_KEYFILE"]
 NSUPDATE_LOG=server_config["NSUPDATE_LOG"]
@@ -143,6 +143,14 @@ def store_host(name, domain, days, pkh, host_records):
 
     return httpjson(True)
 
+def get_price_register_days(days):
+    if days < 1 or days > 365:
+        return 0
+
+    price = int(USCENT / 50) * days
+
+    return price
+
 def get_price_register(request):
     try:
         body = request.data.decode('utf-8')
@@ -150,12 +158,8 @@ def get_price_register(request):
         days = int(in_obj['days'])
     except:
         return 0
-    if days < 1 or days > 365:
-        return 0
 
-    price = int(USCENT / 10) * days
-
-    return price
+    return get_price_register_days(days)
 
 @app.route('/dns/1/host.register', methods=['POST'])
 @payment.required(get_price_register)
@@ -209,12 +213,8 @@ def get_price_register_simple(request):
         days = int(request.args.get('days'))
     except:
         return 0
-    if days < 1 or days > 365:
-        return 0
 
-    price = int(USCENT / 10) * days
-
-    return price
+    return get_price_register_days(days)
 
 @app.route('/dns/1/simpleRegister')
 @payment.required(get_price_register_simple)
@@ -252,7 +252,7 @@ def cmd_host_simpleRegister():
     return store_host(name, domain, days, None, host_records)
 
 @app.route('/dns/1/records.update', methods=['POST'])
-@payment.required(int(USCENT / 3))
+@payment.required(int(USCENT / 5))
 def cmd_host_update():
 
     # Validate JSON body w/ API params
@@ -380,15 +380,15 @@ def get_info():
             },
             {
                 "rpc": "host.register",
-                "per-day": int(USCENT / 10),
+                "per-day": int(USCENT / 50),
             },
             {
                 "rpc": "simpleRegister",
-                "per-day": int(USCENT / 10),
+                "per-day": int(USCENT / 50),
             },
             {
                 "rpc": "records.update",
-                "per-req": int(USCENT / 3),
+                "per-req": int(USCENT / 5),
             },
             {
                 "rpc": "host.delete",

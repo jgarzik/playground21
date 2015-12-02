@@ -88,7 +88,7 @@ Result:
 
 Pricing:
 
-	US$0.001/day
+	US$0.0002/day
 
 
 
@@ -120,7 +120,7 @@ Result:
 
 Pricing:
 
-	US$0.0033
+	US$0.002
 
 
 
@@ -171,7 +171,7 @@ Result:
 
 Pricing:
 
-	US$0.001/day
+	US$0.0002/day
 
 
 
