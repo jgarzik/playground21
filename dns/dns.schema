@@ -3,18 +3,25 @@ CREATE TABLE domains (
 );
 
 CREATE TABLE hosts (
-	name		TEXT PRIMARY KEY,
+	name		TEXT NOT NULL,
+	domain		TEXT NOT NULL,
 	time_create     INTEGER NOT NULL,
 	time_expire     INTEGER NOT NULL,
-	owner_pkh	TEXT
+	owner_pkh	TEXT,
+	FOREIGN KEY(domain) REFERENCES domains(name)
 );
+
+CREATE UNIQUE INDEX hosts_idx ON hosts (name, domain);
 
 CREATE TABLE records (
 	name		TEXT NOT NULL,
+	domain		TEXT NOT NULL,
 	rec_type	TEXT NOT NULL,
 	value		TEXT NOT NULL,
-	ttl		INTEGER NOT NULL
+	ttl		INTEGER NOT NULL,
+	FOREIGN KEY(name) REFERENCES hosts(name),
+	FOREIGN KEY(domain) REFERENCES domains(name)
 );
 
-CREATE INDEX record_idx ON records (name);
+CREATE INDEX record_idx ON records (name, domain);
 

@@ -47,7 +47,7 @@ def get_domains():
 
     return httpjson(domains)
 
-def parse_hosts(name, in_obj):
+def parse_hosts(name, domain, in_obj):
     host_records = []
     try:
         if (not 'hosts' in in_obj):
@@ -68,7 +68,7 @@ def parse_hosts(name, in_obj):
             else:
                 return "Invalid rec type"
 
-            host_rec = (name, rec_type, str(address), ttl)
+            host_rec = (name, domain, rec_type, str(address), ttl)
             host_records.append(host_rec)
 
     except:
@@ -103,10 +103,12 @@ def cmd_host_register():
         return http400("JSON Decode failed")
 
     try:
-        if (not 'name' in in_obj):
-            return http400("Missing name")
+        if (not 'name' in in_obj or
+            not 'domain' in in_obj):
+            return http400("Missing name/domain")
 
         name = in_obj['name']
+        domain = in_obj['domain']
         pkh = None
         days = 1
         if 'pkh' in in_obj:
@@ -116,6 +118,8 @@ def cmd_host_register():
 
         if not valid_name(name) or days < 1 or days > 365:
             return http400("Invalid name/days")
+        if not db.valid_domain(domain):
+            return http404("Domain not found")
         if pkh:
             base58.b58decode_check(pkh)
             if (len(pkh) < 20) or (len(pkh) > 40):
@@ -124,15 +128,15 @@ def cmd_host_register():
         return http400("JSON validation exception")
 
     # Validate and collect host records for updating
-    host_records = parse_hosts(name, in_obj)
+    host_records = parse_hosts(name, domain, in_obj)
     if isinstance(host_records, str):
         return http400(host_records)
 
     # Add to database.  Rely on db to filter out dups.
     try:
-        db.add_host(name, days, pkh)
+        db.add_host(name, domain, days, pkh)
         if len(host_records) > 0:
-            db.update_host(name, host_records)
+            db.update_host(name, domain, host_records)
     except:
         return http400("Host addition rejected")
 
@@ -152,23 +156,27 @@ def cmd_host_update():
     # Validate JSON object basics
     try:
         if (not 'name' in in_obj or
+            not 'domain' in in_obj or
             not 'hosts' in in_obj):
             return http400("Missing name/hosts")
 
         name = in_obj['name']
+        domain = in_obj['domain']
         if not valid_name(name):
             return http400("Invalid name")
+        if not db.valid_domain(domain):
+            return http404("Domain not found")
     except:
         return http400("JSON validation exception")
 
     # Validate and collect host records for updating
-    host_records = parse_hosts(name, in_obj)
+    host_records = parse_hosts(name, domain, in_obj)
     if isinstance(host_records, str):
         return http400(host_records)
 
     # Verify host exists, and is not expired
     try:
-        hostinfo = db.get_host(name)
+        hostinfo = db.get_host(name, domain)
         if hostinfo is None:
             return http404("Unknown name")
     except:
@@ -187,7 +195,7 @@ def cmd_host_update():
 
     # Add to database.  Rely on db to filter out dups.
     try:
-        db.update_host(name, host_records)
+        db.update_host(name, domain, host_records)
     except:
         return http400("DB Exception")
 
@@ -206,19 +214,23 @@ def cmd_host_delete():
     # Validate JSON object basics
     try:
         if (not 'name' in in_obj or
+            not 'domain' in in_obj or
             not 'pkh' in in_obj):
             return http400("Missing name/pkh")
 
         name = in_obj['name']
+        domain = in_obj['domain']
         pkh = in_obj['pkh']
         if (not valid_name(name) or (len(pkh) < 10)):
             return http400("Invalid name")
+        if not db.valid_domain(domain):
+            return http404("Domain not found")
     except:
         return http400("JSON validation exception")
 
     # Verify host exists, and is not expired
     try:
-        hostinfo = db.get_host(name)
+        hostinfo = db.get_host(name, domain)
         if hostinfo is None:
             return http404("Unknown name")
     except:
@@ -236,7 +248,7 @@ def cmd_host_delete():
 
     # Remove from database.  Rely on db to filter out dups.
     try:
-        db.delete_host(name)
+        db.delete_host(name, domain)
     except:
         return http400("DB Exception - delete host")
 
@@ -270,5 +282,5 @@ def get_info():
     return httpjson(info_obj)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=12005)
+    app.run(host='0.0.0.0', port=12005, debug=True)
 

@@ -61,10 +61,11 @@ def cmd_domains(ctx):
 
 @click.command(name='register')
 @click.argument('name')
+@click.argument('domain')
 @click.argument('days')
 @click.argument('recordlist', nargs=-1)
 @click.pass_context
-def cmd_register(ctx, name, days, recordlist):
+def cmd_register(ctx, name, domain, days, recordlist):
 
     pubkey = wallet.get_message_signing_public_key()
     addr = pubkey.address()
@@ -82,6 +83,7 @@ def cmd_register(ctx, name, days, recordlist):
 
     req_obj = {
         'name': name,
+        'domain': domain,
         'days': int(days),
         'pkh': addr,
         'hosts': records,
@@ -95,12 +97,14 @@ def cmd_register(ctx, name, days, recordlist):
 
 @click.command(name='update')
 @click.argument('name')
+@click.argument('domain')
 @click.argument('pkh')
 @click.argument('records', nargs=-1)
 @click.pass_context
-def cmd_update(ctx, name, pkh, records):
+def cmd_update(ctx, name, domain, pkh, records):
     req_obj = {
         'name': name,
+        'domain': domain,
         'hosts': [],
     }
     for record in records:
@@ -129,11 +133,13 @@ def cmd_update(ctx, name, pkh, records):
 
 @click.command(name='delete')
 @click.argument('name')
+@click.argument('domain')
 @click.argument('pkh')
 @click.pass_context
-def cmd_delete(ctx, name, pkh):
+def cmd_delete(ctx, name, domain, pkh):
     req_obj = {
         'name': name,
+        'domain': domain,
         'pkh': pkh
     }
 
