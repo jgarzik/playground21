@@ -42,6 +42,51 @@ Running the server
 API
 ===
 
+0. Show endpoint API metadata
+-----------------------------
+HTTP URI: GET /dns/1/domains
+
+Params:
+
+	None
+
+Result:
+
+	application/json document with standard API endpoint descriptors.
+
+Example:
+
+  [
+  {
+    "name": "dns/1",
+    "website": "https://github.com/jgarzik/playground21/tree/master/dns",
+    "pricing": [
+      {
+        "rpc": "domains",
+        "per-req": 0
+      },
+      {
+        "rpc": "host.register",
+        "per-day": 56
+      },
+      {
+        "rpc": "simpleRegister",
+        "per-day": 56
+      },
+      {
+        "rpc": "records.update",
+        "per-req": 564
+      },
+      {
+        "rpc": "host.delete",
+        "per-req": 0
+      }
+    ],
+    "pricing-type": "per-rpc"
+  }
+  ]
+
+
 1. List DNS domains
 -------------------
 Show DNS domains, e.g. "example.com", available for use at this service.
@@ -62,6 +107,12 @@ Pricing:
 
 	Free
 
+Example:
+
+	[
+  		"example.com",
+  		"bcapi.xyz"
+	]
 
 
 2. Register host name
@@ -90,6 +141,17 @@ Pricing:
 
 	US$0.0002/day
 
+Example:
+
+	{
+		"name": "test3",
+		"domain": "example.com",
+		"pkh": "1M3iEX7daqd9psQC8PsxN7ZE3GjoAe6k7d",
+		"days": 1,
+		"hosts": [
+			{"ttl": 30, "address": "127.0.0.1", "rec_type": "A"}
+		]
+	}
 
 
 3. Update host records
@@ -105,13 +167,12 @@ Params:
 
 	name: name to register. Must be valid DNS name.
 	domain: domain name under which name will be registered
-	pkh: public key hash for permissioned updates
 	hosts: (optional) list of objects whose keys are:
 		ttl: DNS TTL, in seconds
 		rec_type: DNS record type ('A' and 'AAAA' supported)
 		address: IPv4 or IPv6 address
 
-	Header X-Bitcoin-Sig contains signature of encoded json document.
+	Header X-Bitcoin-Sig contains signature of encoded json document, signed with key used in host.register.
 
 Result:
 
@@ -121,6 +182,25 @@ Result:
 Pricing:
 
 	US$0.002
+
+Example:
+
+	{
+	  "name": "test"
+	  "domain": "example.com",
+	  "hosts": [
+	    {
+	      "address": "127.0.0.1",
+	      "ttl": 30,
+	      "rec_type": "A"
+	    },
+	    {
+	      "address": "::1",
+	      "ttl": 60,
+	      "rec_type": "AAAA"
+	    }
+	  ],
+	}
 
 
 
@@ -138,7 +218,7 @@ Params:
 	domain: domain name under which name will be registered
 	pkh: public key hash for permissioned updates
 
-	Header X-Bitcoin-Sig contains signature of encoded json document.
+	Header X-Bitcoin-Sig contains signature of encoded json document, signed with key used in host.register.
 
 Result:
 
@@ -149,6 +229,13 @@ Pricing:
 
 	Free
 
+Example:
+
+	{
+	  "domain": "example.com",
+	  "name": "test3",
+	  "pkh": "1M3iEX7daqd9psQC8PsxN7ZE3GjoAe6k7d"
+	}
 
 
 5. Register host name (simplified interface)
@@ -173,5 +260,9 @@ Pricing:
 
 	US$0.0002/day
 
+Example:
 
+Register **test2.example.com** for **4** days at address **127.0.0.1**.
+
+	GET /dns/1/simpleRegister?name=test2&domain=example.com&days=4&ip=127.0.0.1
 
