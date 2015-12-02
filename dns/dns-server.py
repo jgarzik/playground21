@@ -215,8 +215,8 @@ def get_price_register_simple(request):
         days = int(request.args.get('days'))
         ip = request.args.get('ip')
         address = ipaddress.ip_address(ip)
-        if not valid_name(name) or days < 1 or days > 365 or
-           not db.valid_domain(domain):
+        if (not valid_name(name) or days < 1 or days > 365 or
+            not db.valid_domain(domain)):
             return 0
     except:
         return 0
