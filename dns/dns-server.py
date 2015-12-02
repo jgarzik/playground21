@@ -210,7 +210,14 @@ def cmd_host_register():
 
 def get_price_register_simple(request):
     try:
+        name = request.args.get('name')
+        domain = request.args.get('domain')
         days = int(request.args.get('days'))
+        ip = request.args.get('ip')
+        address = ipaddress.ip_address(ip)
+        if not valid_name(name) or days < 1 or days > 365 or
+           not db.valid_domain(domain):
+            return 0
     except:
         return 0
 
@@ -229,9 +236,13 @@ def cmd_host_simpleRegister():
             return http400("Invalid name/days")
         if not db.valid_domain(domain):
             return http404("Domain not found")
+    except:
+        return http400("Invalid name / domain / days supplied")
+
+    try:
         address = ipaddress.ip_address(ip)
     except:
-        return http400("Invalid name / domain / days / ip supplied")
+        return http400("Invalid IP address supplied")
 
     if isinstance(address, ipaddress.IPv4Address):
         rec_type = 'A'
@@ -372,6 +383,7 @@ def get_info():
     # API endpoint metadata - export list of services
     info_obj = [{
         "name": "dns/1",
+        "website": "https://github.com/jgarzik/playground21/tree/master/dns",
         "pricing-type": "per-rpc",
         "pricing": [
             {
