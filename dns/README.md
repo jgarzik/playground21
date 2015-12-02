@@ -56,35 +56,33 @@ Result:
 
 Example:
 
-  [
-  {
-    "name": "dns/1",
-    "website": "https://github.com/jgarzik/playground21/tree/master/dns",
-    "pricing": [
-      {
-        "rpc": "domains",
-        "per-req": 0
-      },
-      {
-        "rpc": "host.register",
-        "per-day": 56
-      },
-      {
-        "rpc": "simpleRegister",
-        "per-day": 56
-      },
-      {
-        "rpc": "records.update",
-        "per-req": 564
-      },
-      {
-        "rpc": "host.delete",
-        "per-req": 0
-      }
-    ],
-    "pricing-type": "per-rpc"
-  }
-  ]
+	[ {
+	    "name": "dns/1",
+	    "website": "https://github.com/jgarzik/playground21/tree/master/dns",
+	    "pricing": [
+	      {
+	        "rpc": "domains",
+	        "per-req": 0
+	      },
+	      {
+	        "rpc": "host.register",
+	        "per-day": 56
+	      },
+	      {
+	        "rpc": "simpleRegister",
+	        "per-day": 56
+	      },
+	      {
+	        "rpc": "records.update",
+	        "per-req": 564
+	      },
+	      {
+	        "rpc": "host.delete",
+	        "per-req": 0
+	      }
+	    ],
+	    "pricing-type": "per-rpc"
+	} ]
 
 
 1. List DNS domains
