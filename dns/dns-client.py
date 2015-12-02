@@ -95,6 +95,17 @@ def cmd_register(ctx, name, domain, days, recordlist):
     answer = requests.post(url=sel_url.format(), headers=headers, data=body)
     print(answer.text)
 
+@click.command(name='simpleregister')
+@click.argument('name')
+@click.argument('domain')
+@click.argument('days')
+@click.argument('ipaddress')
+@click.pass_context
+def cmd_simpleRegister(ctx, name, domain, days, ipaddress):
+    sel_url = ctx.obj['endpoint'] + 'dns/1/simpleRegister?name={0}&domain={1}&days={2}&ip={3}'
+    answer = requests.get(url=sel_url.format(name, domain, days, ipaddress))
+    print(answer.text)
+
 @click.command(name='update')
 @click.argument('name')
 @click.argument('domain')
@@ -160,6 +171,7 @@ def cmd_delete(ctx, name, domain, pkh):
 main.add_command(cmd_info)
 main.add_command(cmd_domains)
 main.add_command(cmd_register)
+main.add_command(cmd_simpleRegister)
 main.add_command(cmd_update)
 main.add_command(cmd_delete)
 

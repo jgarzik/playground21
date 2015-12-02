@@ -204,6 +204,53 @@ def cmd_host_register():
 
     return store_host(name, domain, days, pkh, host_records)
 
+def get_price_register_simple(request):
+    try:
+        days = int(request.args.get('days'))
+    except:
+        return 0
+    if days < 1 or days > 365:
+        return 0
+
+    price = int(USCENT / 10) * days
+
+    return price
+
+@app.route('/dns/1/simpleRegister')
+@payment.required(get_price_register_simple)
+def cmd_host_simpleRegister():
+    try:
+        name = request.args.get('name')
+        domain = request.args.get('domain')
+        days = int(request.args.get('days'))
+        ip = request.args.get('ip')
+
+        if not valid_name(name) or days < 1 or days > 365:
+            return http400("Invalid name/days")
+        if not db.valid_domain(domain):
+            return http404("Domain not found")
+        address = ipaddress.ip_address(ip)
+    except:
+        return http400("Invalid name / domain / days / ip supplied")
+
+    if isinstance(address, ipaddress.IPv4Address):
+        rec_type = 'A'
+    elif isinstance(address, ipaddress.IPv6Address):
+        rec_type = 'AAAA'
+    else:
+        return http500("bonkers")
+
+    # Check against reserved host name list
+    if reserved_name(name):
+        return http400("Reserved name.  Name not available for registration.")
+
+    # Validate and collect host records
+    host_records = []
+    host_rec = (name, domain, rec_type, str(address), 1000)
+    host_records.append(host_rec)
+
+    return store_host(name, domain, days, None, host_records)
+
 @app.route('/dns/1/records.update', methods=['POST'])
 @payment.required(int(USCENT / 3))
 def cmd_host_update():
@@ -336,6 +383,10 @@ def get_info():
                 "per-day": int(USCENT / 10),
             },
             {
+                "rpc": "simpleRegister",
+                "per-day": int(USCENT / 10),
+            },
+            {
                 "rpc": "records.update",
                 "per-req": int(USCENT / 3),
             },
@@ -348,5 +399,5 @@ def get_info():
     return httpjson(info_obj)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=12005, debug=True)
+    app.run(host='0.0.0.0', port=12005)
 
