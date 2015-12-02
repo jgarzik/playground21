@@ -96,7 +96,7 @@ Pricing:
 Replace _all_ DNS records associated a host, with the specified list.  An
 empty list deletes all records.
 
-HTTP URI: POST /dns/1/host.update
+HTTP URI: POST /dns/1/records.update
 
 Params:
 

@@ -123,7 +123,7 @@ def cmd_update(ctx, name, domain, pkh, records):
         print("Cannot self-verify message")
         sys.exit(1)
 
-    sel_url = ctx.obj['endpoint'] + 'dns/1/host.update'
+    sel_url = ctx.obj['endpoint'] + 'dns/1/records.update'
     headers = {
         'Content-Type': 'application/json',
         'X-Bitcoin-Sig': sig_str,

@@ -146,13 +146,13 @@ def cmd_host_register():
     try:
         db.add_host(name, domain, days, pkh)
         if len(host_records) > 0:
-            db.update_host(name, domain, host_records)
+            db.update_records(name, domain, host_records)
     except:
         return http400("Host addition rejected")
 
     return httpjson(True)
 
-@app.route('/dns/1/host.update', methods=['POST'])
+@app.route('/dns/1/records.update', methods=['POST'])
 @payment.required(int(USCENT / 3))
 def cmd_host_update():
 
@@ -205,7 +205,7 @@ def cmd_host_update():
 
     # Add to database.  Rely on db to filter out dups.
     try:
-        db.update_host(name, domain, host_records)
+        db.update_records(name, domain, host_records)
     except:
         return http400("DB Exception")
 
@@ -280,7 +280,7 @@ def get_info():
                 "per-day": int(USCENT / 10),
             },
             {
-                "rpc": "host.update",
+                "rpc": "records.update",
                 "per-req": int(USCENT / 3),
             },
             {

@@ -51,7 +51,7 @@ class SrvDb(object):
         }
         return obj
 
-    def update_host(self, name, domain, host_records):
+    def update_records(self, name, domain, host_records):
         cursor = self.connection.cursor()
 
         cursor.execute("DELETE FROM records WHERE name = ? AND domain = ?", (name, domain))
