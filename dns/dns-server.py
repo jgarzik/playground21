@@ -130,6 +130,18 @@ def parse_hosts(name, domain, in_obj):
 
     return host_records
 
+def store_host(name, domain, days, pkh, host_records):
+    # Add to database.  Rely on db to filter out dups.
+    try:
+        db.add_host(name, domain, days, pkh)
+        if len(host_records) > 0:
+            if not nsupdate_exec(name, domain, host_records):
+                http500("nsupdate failure")
+            db.update_records(name, domain, host_records)
+    except:
+        return http400("Host addition rejected")
+
+    return httpjson(True)
 
 def get_price_register(request):
     try:
@@ -190,17 +202,7 @@ def cmd_host_register():
     if isinstance(host_records, str):
         return http400(host_records)
 
-    # Add to database.  Rely on db to filter out dups.
-    try:
-        db.add_host(name, domain, days, pkh)
-        if len(host_records) > 0:
-            if not nsupdate_exec(name, domain, host_records):
-                http500("nsupdate failure")
-            db.update_records(name, domain, host_records)
-    except:
-        return http400("Host addition rejected")
-
-    return httpjson(True)
+    return store_host(name, domain, days, pkh, host_records)
 
 @app.route('/dns/1/records.update', methods=['POST'])
 @payment.required(int(USCENT / 3))
