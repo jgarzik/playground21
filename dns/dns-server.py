@@ -30,6 +30,7 @@ wallet = Wallet()
 payment = Payment(app, wallet)
 
 name_re = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9-]*$")
+name_ns_re = re.compile(r"^ns[0-9]+")
 
 def valid_name(name):
     if not name or len(name) < 1 or len(name) > 64:
@@ -37,6 +38,11 @@ def valid_name(name):
     if not name_re.match(name):
         return False
     return True
+
+def reserved_name(name):
+    if name_ns_re.match(name):
+        return True
+    return False
 
 @app.route('/dns/1/domains')
 def get_domains():
@@ -126,6 +132,10 @@ def cmd_host_register():
                 return http400("Invalid pkh")
     except:
         return http400("JSON validation exception")
+
+    # Check against reserved host name list
+    if reserved_name(name):
+        return http400("Reserved name.  Name not available for registration.")
 
     # Validate and collect host records for updating
     host_records = parse_hosts(name, domain, in_obj)
