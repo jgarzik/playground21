@@ -73,6 +73,7 @@ Params:
 	In HTTP body, a application/json document containing the following keys:
 
 	name: name to register. Must be valid DNS name.
+	domain: domain name under which name will be registered
 	pkh: (optional) public key hash for permissioned updates
 	days: (optional) number of days to keep name registered (1-365)
 	hosts: (optional) list of objects whose keys are:
@@ -103,6 +104,7 @@ Params:
 	In HTTP body, a application/json document containing the following keys:
 
 	name: name to register. Must be valid DNS name.
+	domain: domain name under which name will be registered
 	pkh: public key hash for permissioned updates
 	hosts: (optional) list of objects whose keys are:
 		ttl: DNS TTL, in seconds
@@ -133,6 +135,7 @@ Params:
 	In HTTP body, a application/json document containing the following keys:
 
 	name: name to register. Must be valid DNS name.
+	domain: domain name under which name will be registered
 	pkh: public key hash for permissioned updates
 
 	Header X-Bitcoin-Sig contains signature of encoded json document.
@@ -145,6 +148,30 @@ Result:
 Pricing:
 
 	Free
+
+
+
+5. Register host name (simplified interface)
+--------------------------------------------
+HTTP URI: GET /dns/1/simpleRegister
+
+Params:
+
+	HTTP query string parameters:
+
+	name: name to register. Must be valid DNS name.
+	domain: domain name under which name will be registered
+	days: Number of days to register
+	ip: IPv4 or IPv6 address (e.g. 127.0.0.1)
+
+Result:
+
+	application/json document with the following data: true
+	(or an HTTP 4xx, 5xx error)
+
+Pricing:
+
+	US$0.001/day
 
 
 
