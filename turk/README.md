@@ -9,7 +9,7 @@ Summary:  API for automating and comparing work by human(?) workers.
 How it works:
 
 1. Supervisor submits an image, and a list of questions about an image.  A
-minimum number of works, and a bitcoin reward, is specified.
+minimum number of workers, and a bitcoin reward, is specified.
 
 2. Workers download the image, answer the question(s), submit results.
 
