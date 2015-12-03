@@ -83,14 +83,31 @@ def process_work(id, task):
     if len(answers) < task.min_workers:
         return
 
-    # TODO compare answer data
+    # TODO compare answer data more comprehensively
+    scores = []
+    for ai in range(len(answers)):
+        answer_obj = answers[ai]
+        score = 0
+        for i in range(len(answer)):
+            if i == ai:
+                continue
+            compare_answer_obj = answers[i]
+            match = True
+            for j in range(len(answer_obj['answers'])):
+                if answer_obj['answers'][j] != answer_obj['answers'][j]:
+                    match = False
+            if match:
+                score = score + 1
+        scores.append(score)
 
     # close task
     db.task_close(id)
 
     # issue worker payouts
     worker_reward = int(task.reward / len(answers))
-    for answer in answer:
+    for score in scores:
+        if score == 0:
+            continue
         worker = db.worker_get(answer['worker'])
         if worker:
             wallet.sendto(worker['payout_addr'], worker_reward)
