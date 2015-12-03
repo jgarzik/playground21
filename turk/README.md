@@ -6,6 +6,18 @@ WARNING:  Incomplete work-in-progress.
 
 Summary:  API for automating and comparing work by human(?) workers.
 
+How it works:
+
+1. Supervisor submits an image, and a list of questions about an image.  A
+minimum number of works, and a bitcoin reward, is specified.
+
+2. Workers download the image, answer the question(s), submit results.
+
+3. API collects work.  When X workers have submitted answers, they are
+compared for matches.  The most matches - most accurate - workers receive
+the reward.
+
+
 Status:  Missing final compare-work-and-perform-payouts step.  All else works.
 
 
