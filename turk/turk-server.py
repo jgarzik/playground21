@@ -78,6 +78,23 @@ def get_task(id):
         'Content-type': 'application/json',
     })
 
+def process_work(id, task):
+    answers = db.answers_get(id)
+    if len(answers) < task.min_workers:
+        return
+
+    # TODO compare answer data
+
+    # close task
+    db.task_close(id)
+
+    # issue worker payouts
+    worker_reward = int(task.reward / len(answers))
+    for answer in answer:
+        worker = db.worker_get(answer['worker'])
+        if worker:
+            wallet.sendto(worker['payout_addr'], worker_reward)
+
 @app.route('/task', methods=['POST'])
 @payment.required(USCENT * 1)
 def cmd_task_submit():
@@ -148,7 +165,8 @@ def cmd_task_submit():
     except:
         return ("Initial answer storage failed", 400, {'Content-Type':'text/plain'})
 
-    # FIXME TODO
+    # If we have enough answers, compare work and payout
+    process_work(id, task)
 
     body = json.dumps(True, indent=2)
     return (body, 200, {

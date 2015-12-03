@@ -18,7 +18,7 @@ compared for matches.  The most matches - most accurate - workers receive
 the reward.
 
 
-Status:  Missing final compare-work-and-perform-payouts step.  All else works.
+Status:  Final compare-work-and-perform-payouts step is UNTESTED.  All else works.
 
 
 First time setup

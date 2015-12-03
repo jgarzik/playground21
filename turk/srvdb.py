@@ -44,6 +44,11 @@ class SrvDb(object):
         tstamp = int(time.time())
         cursor.execute("INSERT INTO tasks VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, summary, pkh, image, image_ctype, template, min_workers, reward, tstamp))
 
+    def task_close(self, id):
+        cursor = self.connection.cursor()
+
+        cursor.execute("UPDATE tasks SET time_closed=datetime('now') WHERE id = ?", (id,))
+
     def tasks(self):
         cursor = self.connection.cursor()
 
@@ -85,3 +90,16 @@ class SrvDb(object):
         tstamp = int(time.time())
         cursor.execute("INSERT INTO answers VALUES(?, ?, ?, ?)", (id, pkh, answers, tstamp))
 
+    def answers_get(self, id):
+        cursor = self.connection.cursor()
+
+        answers = []
+        for row in cursor.execute("SELECT * FROM answers WHERE id = ?", (id,)):
+            obj = {
+                'worker': row[1],
+                'answers': json.loads(row[2]),
+                'time_submit': int(row[3]),
+            }
+            answers.append(obj)
+
+        return answers
