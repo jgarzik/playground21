@@ -1,0 +1,29 @@
+CREATE TABLE workers (
+	auth_pkh	TEXT PRIMARY KEY,
+	payout_addr	TEXT NOT NULL,
+	tasks_req	INTEGER NOT NULL,
+	tasks_done	INTEGER NOT NULL,
+	tasks_accepted	INTEGER NOT NULL
+);
+
+CREATE TABLE tasks (
+	id		TEXT PRIMARY KEY,
+	summary		TEXT NOT NULL,
+	auth_pkh	TEXT NOT NULL,
+	image		BLOB NOT NULL,
+	image_ctype	TEXT NOT NULL,
+	template_json	TEXT NOT NULL,
+	min_workers	INTEGER NOT NULL,
+	reward		INTEGER NOT NULL,
+	time_create	INTEGER NOT NULL
+);
+
+CREATE TABLE answers (
+	id		TEXT NOT NULL,
+	worker_pkh	TEXT NOT NULL,
+	answers_json	TEXT NOT NULL,
+	time_submit	INTEGER NOT NULL
+);
+
+CREATE INDEX answers_idx ON answers (id);
+
