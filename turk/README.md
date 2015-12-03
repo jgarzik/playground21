@@ -2,7 +2,11 @@
 turk - Mechanical Turk service
 ==============================
 
+WARNING:  Incomplete work-in-progress.
+
 Summary:  API for automating and comparing work by human(?) workers.
+
+Status:  Missing final compare-work-and-perform-payouts step.  All else works.
 
 
 First time setup

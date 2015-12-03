@@ -11,11 +11,11 @@ Projects
 * **fortune**: receive a pithy saying (fortune cookie)
 * **kvdb**: single node key/value API, backed by reliable storage
 * **kvram**: single node key/value API, backed by memory
-* **turk**: Mechanical Turk
 
 
 Incomplete works-in-progress
 ----------------------------
 * signing: Bitcoin transaction signing server
 * stegano: Steganography server
+* **turk**: Mechanical Turk (status: 98% there)
 
