@@ -2,7 +2,7 @@
 turk - Mechanical Turk service
 ==============================
 
-WARNING:  Incomplete work-in-progress.
+WARNING:  Untested code ahead.  Needs lots of testing.
 
 Summary:  API for automating and comparing work by human(?) workers.
 
