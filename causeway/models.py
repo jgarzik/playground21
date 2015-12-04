@@ -29,11 +29,13 @@ class Kv(db.Model):
 
     key = db.Column(db.String(64), primary_key=True)
     value = db.Column(db.String(8192))
+    owner = db.Column(db.String(64))
     sale = db.Column(db.Integer)        #aka bucket
 
-    def __init__(self, key, value, sale):
+    def __init__(self, key, value, owner, sale):
         self.key = key
         self.value = value
+        self.owner = owner
         self.sale = sale
 
     def __repr__(self):

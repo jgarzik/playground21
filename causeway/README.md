@@ -9,6 +9,63 @@ This project is for a server that will store and return data for a certain amoun
 * All requests via HTTP GET except where noted.
 * Data returned as JSON, formatted with indent=4 for now.
 
+### /get
+    Parameters
+        key - used to retrieve value
+        
+    Returns
+        key - the key that was requested
+        value - the value stored for the key
+
+Note: Charges bandwidth against sale record associated with key/value.
+
+### /price
+    Parameters
+        None
+        
+    Returns
+        price - satoshis for 1 MB storage + 50 MB transfer
+
+### /buy
+    Parameters
+        contact - email address to notify on expiration
+        address - owner of new hosting bucket
+
+    Returns
+        result - success or error
+        buckets - listing free space, reamining bandwidth, and expiration
+
+        
+### /put (POST)
+    Parameters
+        key - string
+        value - string
+        address - account to charge for this data
+        nonce - latest unused 32-byte string retrieved via /nonce
+        signature - signature over concat(key + value + address + nonce) by 
+            private key for address
+
+    Returns
+        status - "success" or "error: " + error reason
+
+### /delete (POST)
+    Parameters
+        key - string
+        address - account that owns this key
+        nonce = latest unused 32-byte string retrieved via /nonce
+        signature - signature over concat(key + address + nonce) by 
+            private key for address
+
+### /nonce
+    Parameters
+        address - manually entered account requesting a nonce, users will need to 
+                  pay to register in order to be eligible for nonces
+        
+    Returns
+        nonce - random 32-byte string
+        
+Note: nonce will later be stored until used or next nonce generated for address
+
 ### /help
     Parameters
         None
@@ -26,41 +83,6 @@ This project is for a server that will store and return data for a certain amoun
         free - bytes free
         price - satoshis for 1 MB storage + 50 MB transfer
 
-### /price
-    Parameters
-        None
-        
-    Returns
-        price - satoshis for 1 MB storage + 50 MB transfer
-
-### /address
-    Parameters
-        contact - email or Bitmessage address to contact on expiration
-        address - account this will be used to fund
-        signature - signature for concatenation of contact and address by
-            private key for address
-        
-    Returns
-        address - a dummy string, later an address suitable for funding an account
-
-### /nonce
-    Parameters
-        address - manually entered account requesting a nonce, users will need to 
-                  pay to register in order to be eligible for nonces
-        
-    Returns
-        nonce - random 32-byte string
-        
-Note: nonce will later be stored until used or next nonce generated for address
-
-### /buy
-    Parameters
-        contact - email address to notify on expiration
-        address - owner of new hosting bucket
-
-    Returns
-        result - success or error
-        buckets - listing free space, reamining bandwidth, and expiration
 
 ## Installation
 
@@ -82,6 +104,16 @@ Then you'll need to copy default\_settings.py to settings.py and change DATABASE
   otherwise, the owner is notified via email that expiration is affecting hosting.
 * Data is kept if bandwidth is exceeded just no longer served until more is purchased.
 
+### /address
+    Parameters
+        contact - email or Bitmessage address to contact on expiration
+        address - account this will be used to fund
+        signature - signature for concatenation of contact and address by
+            private key for address
+        
+    Returns
+        address - a dummy string, later an address suitable for funding an account
+
 ### /balance
     Parameters
         address - account on which to report balance
@@ -91,33 +123,3 @@ Then you'll need to copy default\_settings.py to settings.py and change DATABASE
     Returns
         balance - satoshis worth of value left on account
 
-### /get
-    Parameters
-        key - used to retrieve value
-        
-    Returns
-        key - the key that was requested
-        value - the last value stored for the key
-        
-Note: Charges bandwidth against sale record associated with key/value.
-        
-### /put (POST)
-    Parameters
-        key - string
-        value - string
-        address - account to charge for this data
-        nonce - latest unused 32-byte string retrieved via /nonce
-        signature - signature over concat(key + value + address + nonce) by 
-            private key for address
-
-    Returns
-        status - "success" or "error: " + error reason
-            Possible error reasons
-
-### /delete
-    Parameters
-        key - string
-        address - account that owns this key
-        nonce = latest unused 32-byte string retrieved via /nonce
-        signature - signature over concat(key + address + nonce) by 
-            private key for address
