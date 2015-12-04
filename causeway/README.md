@@ -9,13 +9,6 @@ This project is for a server that will store and return data for a certain amoun
 * All requests via HTTP GET except where noted.
 * Data returned as JSON, formatted with indent=4 for now.
 
-### /help
-    Parameters
-        None
-
-    Returns
-        List of available endpoints
-
 ### /get
     Parameters
         key - used to retrieve value
@@ -25,6 +18,23 @@ This project is for a server that will store and return data for a certain amoun
         value - the value stored for the key
 
 Note: Charges bandwidth against sale record associated with key/value.
+
+### /price
+    Parameters
+        None
+        
+    Returns
+        price - satoshis for 1 MB storage + 50 MB transfer
+
+### /buy
+    Parameters
+        contact - email address to notify on expiration
+        address - owner of new hosting bucket
+
+    Returns
+        result - success or error
+        buckets - listing free space, reamining bandwidth, and expiration
+
         
 ### /put (POST)
     Parameters
@@ -38,32 +48,13 @@ Note: Charges bandwidth against sale record associated with key/value.
     Returns
         status - "success" or "error: " + error reason
 
-### /status
+### /delete (POST)
     Parameters
-        None
-
-    Returns
-        uptime - time in seconds that the service has been running
-        stored - bytes stored
-        free - bytes free
-        price - satoshis for 1 MB storage + 50 MB transfer
-
-### /price
-    Parameters
-        None
-        
-    Returns
-        price - satoshis for 1 MB storage + 50 MB transfer
-
-### /address
-    Parameters
-        contact - email or Bitmessage address to contact on expiration
-        address - account this will be used to fund
-        signature - signature for concatenation of contact and address by
+        key - string
+        address - account that owns this key
+        nonce = latest unused 32-byte string retrieved via /nonce
+        signature - signature over concat(key + address + nonce) by 
             private key for address
-        
-    Returns
-        address - a dummy string, later an address suitable for funding an account
 
 ### /nonce
     Parameters
@@ -75,14 +66,23 @@ Note: Charges bandwidth against sale record associated with key/value.
         
 Note: nonce will later be stored until used or next nonce generated for address
 
-### /buy
+### /help
     Parameters
-        contact - email address to notify on expiration
-        address - owner of new hosting bucket
+        None
 
     Returns
-        result - success or error
-        buckets - listing free space, reamining bandwidth, and expiration
+        List of available endpoints
+
+### /status
+    Parameters
+        None
+
+    Returns
+        uptime - time in seconds that the service has been running
+        stored - bytes stored
+        free - bytes free
+        price - satoshis for 1 MB storage + 50 MB transfer
+
 
 ## Installation
 
@@ -104,6 +104,16 @@ Then you'll need to copy default\_settings.py to settings.py and change DATABASE
   otherwise, the owner is notified via email that expiration is affecting hosting.
 * Data is kept if bandwidth is exceeded just no longer served until more is purchased.
 
+### /address
+    Parameters
+        contact - email or Bitmessage address to contact on expiration
+        address - account this will be used to fund
+        signature - signature for concatenation of contact and address by
+            private key for address
+        
+    Returns
+        address - a dummy string, later an address suitable for funding an account
+
 ### /balance
     Parameters
         address - account on which to report balance
@@ -113,10 +123,3 @@ Then you'll need to copy default\_settings.py to settings.py and change DATABASE
     Returns
         balance - satoshis worth of value left on account
 
-### /delete
-    Parameters
-        key - string
-        address - account that owns this key
-        nonce = latest unused 32-byte string retrieved via /nonce
-        signature - signature over concat(key + address + nonce) by 
-            private key for address

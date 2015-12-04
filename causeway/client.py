@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#.!/usr/bin/env python3
 
 import sys, json, os, argparse
 
@@ -14,19 +14,25 @@ requests = BitTransferRequests(wallet, username)
 
 # server address
 def buy(args):
+    primary_address = wallet.get_payout_address()
     sel_url = "{0}buy?address={1}&contact={2}"
-    answer = requests.get(url=sel_url.format(args.url, args.address, args.contact))
+    answer = requests.get(url=sel_url.format(args.url, primary_address, args.contact))
     if answer.status_code != 200:
         print("Could not make offchain payment. Please check that you have sufficient balance.")
     else:
         print(answer.text)
 
 def put(args):
+    primary_address = wallet.get_payout_address()
+    message = args.key + args.value + primary_address + args.nonce
+    signature = wallet.sign_message(message)
+
     data = {"key": args.key, 
             "value": args.value,
-            #"nonce": args.nonce,
-            #"signature": args.signature,
-            "address": args.address}
+            "nonce": args.nonce,
+            "signature": signature,
+            "address": primary_address}
+
     sel_url = "{0}put"
     body = json.dumps(data)
     headers = {'Content-Type': 'application/json'}
@@ -34,10 +40,14 @@ def put(args):
     print(answer.text)
 
 def delete(args):
+    primary_address = wallet.get_payout_address()
+    message = args.key + primary_address + args.nonce
+    signature = wallet.sign_message(message)
+
     data = {"key": args.key, 
-            #"nonce": args.nonce,
-            #"signature": args.signature,
-            "address": args.address}
+            "nonce": args.nonce,
+            "signature": signature,
+            "address": primary_address}
     sel_url = "{0}delete"
     body = json.dumps(data)
     headers = {'Content-Type': 'application/json'}
@@ -87,13 +97,15 @@ def buy_file(server_url = 'http://localhost:5000/'):
         print("That is an invalid input. Only numerical inputs are accepted.")
 
 def nonce(args):
+    primary_address = wallet.get_payout_address()
     sel_url = args.url + 'nonce?address={0}'
-    answer = requests.get(url=sel_url.format(args.address))
+    answer = requests.get(url=sel_url.format(primary_address))
     print(answer.text)
 
 def address(args):
+    primary_address = wallet.get_payout_address()
     sel_url = args.url + 'address?contact={0}&address={1}&signature={2}'
-    answer = requests.get(url=sel_url.format(args.contact, args.address, args.signature))
+    answer = requests.get(url=sel_url.format(args.contact, primary_address, args.signature))
     print(answer.text)
 
 def help(args):
@@ -106,21 +118,23 @@ if __name__ == '__main__':
 
     parser_buy = subparsers.add_parser('buy', help="Purchase hosting bucket")
     parser_buy.add_argument('url', help='Url of the Causeway server with trailing slash.')  
-    parser_buy.add_argument('address', help='Address used as username for the service.')  
+    #parser_buy.add_argument('address', help='Address used as username for the service.')  
     parser_buy.add_argument('contact', help='Email address to contact on expiration.')  
     parser_buy.set_defaults(func=buy)
 
     parser_put = subparsers.add_parser('put', help="Set or update a value for a key")
     parser_put.add_argument('url', help='Url of the Causeway server with trailing slash.')  
-    parser_put.add_argument('address', help='Address used as username for the service.')  
+    #parser_put.add_argument('address', help='Address used as username for the service.')  
     parser_put.add_argument('key', help='Data storage key')  
     parser_put.add_argument('value', help='Data stored by key')  
+    parser_put.add_argument('nonce', help='Nonce for signature uniqueness.')  
     parser_put.set_defaults(func=put)
 
     parser_delete = subparsers.add_parser('delete', help="Delete a key/value pair.")
     parser_delete.add_argument('url', help='Url of the Causeway server with trailing slash.')  
-    parser_delete.add_argument('address', help='Address used as username for the service.')  
+    #parser_delete.add_argument('address', help='Address used as username for the service.')  
     parser_delete.add_argument('key', help='Data storage key')  
+    parser_delete.add_argument('nonce', help='Nonce for signature uniqueness.')  
     parser_delete.set_defaults(func=delete)
 
     parser_get = subparsers.add_parser('get', help="Download the value stored with a key")
@@ -130,7 +144,7 @@ if __name__ == '__main__':
 
     parser_nonce = subparsers.add_parser('nonce', help="Get nonce for the address")
     parser_nonce.add_argument('url', help='Url of the Causeway server with trailing slash.')  
-    parser_nonce.add_argument('address', help='Address used as username for the service.')  
+    #parser_nonce.add_argument('address', help='Address used as username for the service.')  
     parser_nonce.set_defaults(func=nonce)
 
     parser_address = subparsers.add_parser('address', help="Get a deposit address")
