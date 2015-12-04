@@ -22,13 +22,31 @@ def buy(args):
         print(answer.text)
 
 def put(args):
+    data = {"key": args.key, 
+            "value": args.value,
+            #"nonce": args.nonce,
+            #"signature": args.signature,
+            "address": args.address}
     sel_url = "{0}put"
-    answer = requests.put(url=sel_url.format(args.url), 
-                            data = {"key": args.key, 
-                                    "value": args.value,
-                                    #"nonce": args.nonce,
-                                    #"signature": args.signature,
-                                    "address": args.address})
+    body = json.dumps(data)
+    headers = {'Content-Type': 'application/json'}
+    answer = requests.post(url=sel_url.format(args.url), headers=headers, data=body)
+    print(answer.text)
+
+def delete(args):
+    data = {"key": args.key, 
+            #"nonce": args.nonce,
+            #"signature": args.signature,
+            "address": args.address}
+    sel_url = "{0}delete"
+    body = json.dumps(data)
+    headers = {'Content-Type': 'application/json'}
+    answer = requests.post(url=sel_url.format(args.url), headers=headers, data=body)
+    print(answer.text)
+
+def get(args):
+    sel_url = "{0}get?key={1}"
+    answer = requests.get(url=sel_url.format(args.url, args.key))
     print(answer.text)
 
 def buy_file(server_url = 'http://localhost:5000/'):
@@ -86,18 +104,29 @@ if __name__ == '__main__':
     #parser.set_defaults(func=help)
     subparsers = parser.add_subparsers(help="Commands")
 
-    parser_nonce = subparsers.add_parser('buy', help="Purchase hosting bucket")
-    parser_nonce.add_argument('url', help='Url of the Causeway server with trailing slash.')  
-    parser_nonce.add_argument('address', help='Address used as username for the service.')  
-    parser_nonce.add_argument('contact', help='Email address to contact on expiration.')  
-    parser_nonce.set_defaults(func=buy)
+    parser_buy = subparsers.add_parser('buy', help="Purchase hosting bucket")
+    parser_buy.add_argument('url', help='Url of the Causeway server with trailing slash.')  
+    parser_buy.add_argument('address', help='Address used as username for the service.')  
+    parser_buy.add_argument('contact', help='Email address to contact on expiration.')  
+    parser_buy.set_defaults(func=buy)
 
-    parser_nonce = subparsers.add_parser('put', help="Upload a file")
-    parser_nonce.add_argument('url', help='Url of the Causeway server with trailing slash.')  
-    parser_nonce.add_argument('address', help='Address used as username for the service.')  
-    parser_nonce.add_argument('key', help='Data storage key')  
-    parser_nonce.add_argument('value', help='Data stored by key')  
-    parser_nonce.set_defaults(func=put)
+    parser_put = subparsers.add_parser('put', help="Set or update a value for a key")
+    parser_put.add_argument('url', help='Url of the Causeway server with trailing slash.')  
+    parser_put.add_argument('address', help='Address used as username for the service.')  
+    parser_put.add_argument('key', help='Data storage key')  
+    parser_put.add_argument('value', help='Data stored by key')  
+    parser_put.set_defaults(func=put)
+
+    parser_delete = subparsers.add_parser('delete', help="Delete a key/value pair.")
+    parser_delete.add_argument('url', help='Url of the Causeway server with trailing slash.')  
+    parser_delete.add_argument('address', help='Address used as username for the service.')  
+    parser_delete.add_argument('key', help='Data storage key')  
+    parser_delete.set_defaults(func=delete)
+
+    parser_get = subparsers.add_parser('get', help="Download the value stored with a key")
+    parser_get.add_argument('url', help='Url of the Causeway server with trailing slash.')  
+    parser_get.add_argument('key', help='Key to retrieve')  
+    parser_get.set_defaults(func=get)
 
     parser_nonce = subparsers.add_parser('nonce', help="Get nonce for the address")
     parser_nonce.add_argument('url', help='Url of the Causeway server with trailing slash.')  

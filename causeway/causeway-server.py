@@ -62,7 +62,7 @@ def home():
     return (body, 200, {'Content-length': len(body),
                         'Content-type': 'application/json',
                        }
-           )
+                       )
 
 @app.route('/status')
 def status():
@@ -118,35 +118,49 @@ def buy_hosting():
                        }
            )
 
-@app.route('/put', methods=['PUT'])
+@app.route('/put', methods=['POST'])
 def put():
     '''Store a key-value pair.'''
     # get size of file sent
-    print(dir(request.args))
-    key = request.args.get('key', '')
-    value = request.args.get('value', '')
-    owner = request.args.get('address', '')
+    # Validate JSON body w/ API params
+    try:
+        body = request.data.decode('utf-8')
+        in_obj = json.loads(body)
+    except:
+        return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
+
+    k = in_obj['key']
+    v = in_obj['value']
+    o = in_obj['address']
     # nonce = request.get_json().get('nonce', '')
     # signature = request.get_json().get('signature', '')
 
-    size = len(key) + len(value)
+    size = len(k) + len(v)
 
     # check if owner has enough free storage
     # get free space from each of owner's buckets
-    result = db.engine.execute('select * from sale where julianday("now") - julianday(sale.created) < sale.term order by sale.created desc')
+    result = db.engine.execute('select * from sale where julianday("now") - \
+                julianday(sale.created) < sale.term order by sale.created desc')
     # choose newest bucket that has enough space
     sale_id = None
     for row in result:
         if (row[7] + size) < (1024 * 1024):
             sale_id = row[0]
-    # db.session.query(Owner).get(request.post('address'))
 
     if sale_id is None:     # we couldn't find enough free space
         body = json.dumps({'error': 'Insufficient storage space.'})
     else:
-        kv = Kv(key, value, sale_id)
-        db.session.add(kv)
-        db.session.commit()
+        # check if key already exists and is owned by the same owner
+        kv = db.session.query(Kv).filter_by(key=k).filter_by(owner=o).first()
+                
+        if kv is None:
+            kv = Kv(k, v, o, sale_id)
+            db.session.add(kv)
+            db.session.commit()
+        else:
+            kv.value = v
+            db.session.commit()
+
         s = db.session.query(Sale).get(sale_id)
         s.bytes_used = s.bytes_used + size
         db.session.commit()
@@ -157,18 +171,61 @@ def put():
                        }
            )
 
+@app.route('/delete', methods=['POST'])
+def delete():
+    '''Delete a key-value pair.'''
+    # Validate JSON body w/ API params
+    try:
+        body = request.data.decode('utf-8')
+        in_obj = json.loads(body)
+    except:
+        return ("JSON Decode failed", 400, {'Content-Type':'text/plain'})
+
+    k = in_obj['key']
+    o = in_obj['address']
+    # nonce = request.get_json().get('nonce', '')
+    # signature = request.get_json().get('signature', '')
+
+    # check if key already exists and is owned by the same owner
+    kv = db.session.query(Kv).filter_by(key=k).filter_by(owner=o).first()
+    size = len(kv.value)
+    sale_id = kv.sale
+    if kv is None:
+        body = json.dumps({'error': 'Key not found or not owned by caller.'})
+        code = 404
+    else:
+        db.session.delete(kv)
+        s = db.session.query(Sale).get(sale_id)
+        s.bytes_used = s.bytes_used - size
+        db.session.commit()
+        body = json.dumps({'result': 'success'})
+        code = 200
+    
+    return (body, code, {'Content-length': len(body),
+                         'Content-type': 'application/json',
+                        }
+           )
+
 @app.route('/get')
 def get():
     '''Get a key-value pair.'''
-    # calculate size and check against quota on kv's sale record
-    return
+    
+    key = request.args.get('key')
 
-@app.route('/delete')
-def delete():
-    '''Delete a key-value pair.'''
-    # check if signed by owner
-    # delete file
-    return
+    kv = Kv.query.filter_by(key=key).first()
+
+    if kv is None:
+        body = json.dumps({'error': 'Key not found.'})
+        code = 404
+    else:
+        body = json.dumps({'key': key, 'value': kv.value})
+        code = 200
+
+    # calculate size and check against quota on kv's sale record
+    return (body, code, {'Content-length': len(body),
+                        'Content-type': 'application/json',
+                        }
+           )
 
 @app.route('/nonce')
 def nonce():

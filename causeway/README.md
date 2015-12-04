@@ -16,6 +16,28 @@ This project is for a server that will store and return data for a certain amoun
     Returns
         List of available endpoints
 
+### /get
+    Parameters
+        key - used to retrieve value
+        
+    Returns
+        key - the key that was requested
+        value - the value stored for the key
+
+Note: Charges bandwidth against sale record associated with key/value.
+        
+### /put (POST)
+    Parameters
+        key - string
+        value - string
+        address - account to charge for this data
+        nonce - latest unused 32-byte string retrieved via /nonce
+        signature - signature over concat(key + value + address + nonce) by 
+            private key for address
+
+    Returns
+        status - "success" or "error: " + error reason
+
 ### /status
     Parameters
         None
@@ -90,29 +112,6 @@ Then you'll need to copy default\_settings.py to settings.py and change DATABASE
         
     Returns
         balance - satoshis worth of value left on account
-
-### /get
-    Parameters
-        key - used to retrieve value
-        
-    Returns
-        key - the key that was requested
-        value - the last value stored for the key
-        
-Note: Charges bandwidth against sale record associated with key/value.
-        
-### /put (POST)
-    Parameters
-        key - string
-        value - string
-        address - account to charge for this data
-        nonce - latest unused 32-byte string retrieved via /nonce
-        signature - signature over concat(key + value + address + nonce) by 
-            private key for address
-
-    Returns
-        status - "success" or "error: " + error reason
-            Possible error reasons
 
 ### /delete
     Parameters
