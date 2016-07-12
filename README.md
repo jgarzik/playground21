@@ -1,6 +1,9 @@
 
-21 Bitcoin Computer playground
+21 playground
 ==============================
+
+Experiment with, extend and utilize the playground by installing
+[21](https://21.co/) and following the underlying instructions for each project.
 
 Projects
 --------
